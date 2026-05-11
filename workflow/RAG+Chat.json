@@ -1,5 +1,2162 @@
-[
-    {   
-        "em": "breve"
+{
+  "name": "RAG + Chat",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Chat - Rag - Gemini",
+        "height": 592,
+        "width": 736,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2176,
+        2816
+      ],
+      "typeVersion": 1,
+      "id": "e2fccf69-250e-4740-948a-febd926546e3",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Chat - Sem Rag - Gemini",
+        "height": 464,
+        "width": 512,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2400,
+        1200
+      ],
+      "typeVersion": 1,
+      "id": "83081e82-f483-46dd-bcf2-b237ef1c9809",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -2048,
+        2592
+      ],
+      "id": "c8fb28e6-e2fc-451c-a6e5-0f5bb79a66fe",
+      "name": "Iniciar Embeddings"
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Busca documentos sobre o mercado de trabalho brasileiro (Novo CAGED) incluindo saldos de emprego, admissões, desligamentos, salários e dados por UF/setor.",
+        "qdrantCollection": {
+          "__rl": true,
+          "value": "=QDRANT_COLLECTION_GEMINI",
+          "mode": "id"
+        },
+        "topK": 8,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "typeVersion": 1.3,
+      "position": [
+        2576,
+        3104
+      ],
+      "id": "450d60a2-2357-49b0-946e-ff81f79b58f2",
+      "name": "Store - Tool",
+      "credentials": {
+        "qdrantApi": {
+          "id": "__CRED_QDRANT_API_ID__",
+          "name": "QDRANT_API_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "returnAll": true,
+        "filter": {
+          "folderId": {
+            "__rl": true,
+            "value": "https://drive.google.com/drive/folders/GOOGLE_DRIVE_SOURCE_FOLDER_ID",
+            "mode": "url"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -1856,
+        2720
+      ],
+      "id": "3bed7477-52d7-45f3-aeda-2db730127632",
+      "name": "Buscar Arquivos2",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "__CRED_GOOGLE_DRIVE_ID__",
+          "name": "GOOGLE_DRIVE_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $json.id }}"
+        },
+        "options": {
+          "fileName": "={{ $json.name }}"
+        }
+      },
+      "id": "87e8caad-a81d-4ebd-b8ec-39af3d79e163",
+      "name": "Download2",
+      "type": "n8n-nodes-base.googleDrive",
+      "position": [
+        -1664,
+        2720
+      ],
+      "typeVersion": 3,
+      "notesInFlow": true,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "__CRED_GOOGLE_DRIVE_ID__",
+          "name": "GOOGLE_DRIVE_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "qdrantCollection": {
+          "__rl": true,
+          "value": "=QDRANT_COLLECTION_OLLAMA",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "typeVersion": 1.3,
+      "position": [
+        400,
+        2736
+      ],
+      "id": "2c357354-94c7-4f96-892f-1b2743bddabd",
+      "name": "Store - Embeddings1",
+      "credentials": {
+        "qdrantApi": {
+          "id": "__CRED_QDRANT_API_ID__",
+          "name": "QDRANT_API_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "textSplittingMode": "custom",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        368,
+        2960
+      ],
+      "id": "c15cc421-48c6-49c2-ad98-b4e4a960f765",
+      "name": "Data Loader1"
+    },
+    {
+      "parameters": {
+        "chunkOverlap": 100,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        368,
+        3120
+      ],
+      "id": "c071c068-3bd8-4e3b-a319-86691d50077f",
+      "name": "Quebrar texto1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.mistral.ai/v1/ocr",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "mistralCloudApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"mistral-ocr-latest\",\n  \"document\": {\n    \"type\": \"document_url\",\n    \"document_url\": \"{{ $json.url }}\"\n  },\n    \"bbox_annotation_format\": {\n  \"type\": \"json_schema\",\n  \"json_schema\": {\n    \"schema\": {\n      \"properties\": {\n        \"element_type\": {\n          \"type\": \"string\",\n          \"description\": \"Type: chart, table, image, diagram, formula, signature, logo\"\n        },\n        \"title\": {\n          \"type\": \"string\",\n          \"description\": \"Title or caption of the element exactly as shown\"\n        },\n        \"visible_text\": {\n          \"type\": \"string\",\n          \"description\": \"All text visible inside the element (labels, legends, axis names, values)\"\n        },\n        \"page_section\": {\n          \"type\": \"string\",\n          \"description\": \"Section/heading of the document where this element appears\"\n        }\n      },\n      \"required\": [\"element_type\", \"title\", \"visible_text\", \"page_section\"],\n      \"title\": \"BBOXAnnotation\",\n      \"type\": \"object\",\n      \"additionalProperties\": false\n    },\n    \"name\": \"document_annotation\",\n    \"strict\": true\n  }\n},\n  \"include_image_base64\": true\n}",
+        "options": {}
+      },
+      "id": "c469fbd2-9622-4372-95b1-c9d9a4391a3d",
+      "name": "Download OCR - Mistral1",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        -1040,
+        2592
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "mistralCloudApi": {
+          "id": "__CRED_MISTRAL_ID__",
+          "name": "MISTRAL_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://api.mistral.ai/v1/files/{{ $json.id }}/url",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "mistralCloudApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "expiry",
+              "value": "24"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4c2ee2db-e495-49ac-bcd7-d41010927c91",
+      "name": "Buscar Arquivos - Mistral1",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        -1312,
+        2720
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "mistralCloudApi": {
+          "id": "__CRED_MISTRAL_ID__",
+          "name": "MISTRAL_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.mistral.ai/v1/files",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "mistralCloudApi",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "purpose",
+              "value": "ocr"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "data"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "62476d60-5542-41fb-a43d-e44890d4c0d2",
+      "name": "Enviar Arquivos - Mistral1",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        -1488,
+        2720
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "mistralCloudApi": {
+          "id": "__CRED_MISTRAL_ID__",
+          "name": "MISTRAL_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "createCollection",
+        "collectionName": "QDRANT_COLLECTION_OLLAMA",
+        "vectors": "{\n  \"size\": 3072,\n  \"distance\": \"Cosine\"\n}",
+        "shardNumber": {},
+        "replicationFactor": {},
+        "writeConsistencyFactor": {},
+        "requestOptions": {}
+      },
+      "type": "n8n-nodes-qdrant.qdrant",
+      "typeVersion": 1,
+      "position": [
+        688,
+        2944
+      ],
+      "id": "b8ff3849-c8fa-4945-bfee-402e0aa2a779",
+      "name": "Create Collection",
+      "credentials": {
+        "qdrantRestApi": {
+          "id": "__CRED_QDRANT_REST_ID__",
+          "name": "QDRANT_REST_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parsear resposta do Mistral OCR e separar texto de imagens\nconst ocrResult = $input.first().json;\nconst docUrl = ocrResult.document?.document_url || '';\nconst sourceFile = docUrl.split('/').pop() || ocrResult.model || 'unknown.pdf';\nconst items = [];\n\nif (ocrResult.pages) {\n  for (const page of ocrResult.pages) {\n    // Chunk de texto (markdown da página)\n    if (page.markdown && page.markdown.trim()) {\n      items.push({\n        json: {\n          text: page.markdown,\n          itemType: 'text',\n          metadata: {\n            source_file: sourceFile,\n            page_number: page.index || 0,\n            source_type: 'ocr_text'\n          }\n        }\n      });\n    }\n\n    // Chunks de imagens (elementos visuais com base64)\n    if (page.images && page.images.length > 0) {\n      for (let i = 0; i < page.images.length; i++) {\n        const img = page.images[i];\n        if (img.image_base64) {\n          const annotation = img.annotation || {};\n\n          // Limpar base64: remover prefixo data URI se existir\n          let rawBase64 = img.image_base64;\n          let detectedMime = 'image/jpeg';\n          if (rawBase64.startsWith('data:')) {\n            const match = rawBase64.match(/^data:(image\\/[a-zA-Z+]+);base64,/);\n            if (match) {\n              detectedMime = match[1];\n              rawBase64 = rawBase64.substring(match[0].length);\n            }\n          }\n\n          // Detectar mime pelo header do base64 se não veio do prefixo\n          if (!img.image_base64.startsWith('data:')) {\n            if (rawBase64.startsWith('/9j/')) detectedMime = 'image/jpeg';\n            else if (rawBase64.startsWith('iVBOR')) detectedMime = 'image/png';\n            else if (rawBase64.startsWith('R0lGO')) detectedMime = 'image/gif';\n            else if (rawBase64.startsWith('UklGR')) detectedMime = 'image/webp';\n          }\n\n          const ext = detectedMime.split('/')[1] || 'png';\n\n          items.push({\n            json: {\n              itemType: 'image',\n              annotation: annotation,\n              prompt_context: [\n                `Tipo do elemento: ${annotation.element_type || 'desconhecido'}`,\n                `Título: ${annotation.title || 'sem título'}`,\n                `Texto visível (OCR): ${annotation.visible_text || 'nenhum'}`,\n                `Seção do documento: ${annotation.page_section || 'não identificada'}`\n              ].join('\\n'),\n              metadata: {\n                source_file: sourceFile,\n                page_number: page.index || 0,\n                element_type: annotation.element_type || 'unknown',\n                element_title: annotation.title || '',\n                page_section: annotation.page_section || '',\n                visible_text: annotation.visible_text || '',\n                source_type: 'vision'\n              }\n            },\n            binary: {\n              image: {\n                data: Buffer.from(rawBase64, 'base64').toString('base64'),\n                mimeType: detectedMime,\n                fileName: `${sourceFile}_page${page.index || 0}_img${i}.${ext}`\n              }\n            }\n          });\n        }\n      }\n    }\n  }\n}\n\nif (items.length === 0) {\n  items.push({ json: { itemType: 'empty', text: 'Nenhum conteúdo extraído' } });\n}\n\nreturn items;"
+      },
+      "id": "e90903aa-3473-4927-a921-c85d836a823c",
+      "name": "Separar Texto e Imagens1",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -784,
+        2720
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f1a2b3c4-d5e6-4f7a-8b9c-0d1e2f3a4b5c",
+              "leftValue": "={{ $json.itemType }}",
+              "rightValue": "image",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "ecff6c4d-d987-4b59-ad14-ebab7a6f6def",
+      "name": "Texto ou Imagem?1",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        -560,
+        2720
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Combinar descrição do Anthropic com metadata do OCR\n// Pegar a descrição gerada pelo Anthropic (testar vários campos possíveis)\nconst description = $json.output || $json.text || $json.content || $json.message || JSON.stringify($json);\n\n// Pegar metadata do item original via node Separar Texto e Imagens\n// que está no caminho de execução deste branch\nlet metadata = {};\nlet annotation = {};\ntry {\n  const original = $('Separar Texto e Imagens').first();\n  metadata = original.json.metadata || {};\n  annotation = original.json.annotation || {};\n} catch (e) {\n  // Fallback: tentar extrair do próprio input\n  metadata = $json.metadata || {};\n  annotation = $json.annotation || {};\n}\n\nreturn {\n  json: {\n    text: [\n      `## ${metadata.element_title || annotation.title || 'Elemento Visual'}`,\n      `**Tipo:** ${metadata.element_type || 'desconhecido'}`,\n      `**Seção:** ${metadata.page_section || 'não identificada'}`,\n      '',\n      description,\n      '',\n      `**Texto OCR original:** ${metadata.visible_text || 'nenhum'}`\n    ].join('\\n'),\n    metadata: {\n      source_file: metadata.source_file || '',\n      page_number: metadata.page_number || 0,\n      element_type: metadata.element_type || 'unknown',\n      element_title: metadata.element_title || '',\n      page_section: metadata.page_section || '',\n      source_type: 'vision'\n    }\n  }\n};"
+      },
+      "id": "dde4c0bb-01dd-44a2-bd58-3b9edb78fcba",
+      "name": "Formatar Chunk Visual1",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        48,
+        2576
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "operation": "deleteCollection",
+        "collectionName": {
+          "__rl": true,
+          "value": "QDRANT_COLLECTION_OLLAMA",
+          "mode": "name"
+        },
+        "requestOptions": {}
+      },
+      "type": "n8n-nodes-qdrant.qdrant",
+      "typeVersion": 1,
+      "position": [
+        688,
+        3136
+      ],
+      "id": "2961ffdd-dba4-4486-885f-a94b9e5a141c",
+      "name": "Delete Collection",
+      "credentials": {
+        "qdrantRestApi": {
+          "id": "__CRED_QDRANT_REST_ID__",
+          "name": "QDRANT_REST_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "modelId": {
+          "__rl": true,
+          "value": "claude-sonnet-4-5-20250929",
+          "mode": "list",
+          "cachedResultName": "claude-sonnet-4-5-20250929"
+        },
+        "text": "=Analise esta imagem extraída de um documento PDF.\n\nContexto:\n{{ $json.prompt_context }}\n\nSua tarefa — seja extremamente preciso:\n\n1. GRÁFICOS: Identifique o tipo (barra, linha, pizza, etc.), descreva TODOS os eixos com unidades, liste TODOS os data points e valores visíveis, descreva tendências e conclusões. Transcreva números EXATAMENTE como aparecem.\n\n2. TABELAS: Transcreva a tabela COMPLETA em formato markdown com todas as linhas e colunas. Não omita nenhum dado. Preserve formatação numérica original.\n\n3. IMAGENS/DIAGRAMAS: Descreva o conteúdo, relações, fluxos, cores significativas, e qualquer informação textual presente.\n\n4. FÓRMULAS: Transcreva em LaTeX ou texto, com descrição do que calculam.\n\nRetorne uma descrição completa e autocontida — alguém deve conseguir entender o conteúdo sem ver a imagem original.",
+        "inputType": "binary",
+        "binaryPropertyName": "image",
+        "simplify": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.anthropic",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        2528
+      ],
+      "id": "25400b60-0c9c-45fa-a402-e471a061bba7",
+      "name": "Analyze Image - Anthropic1",
+      "credentials": {
+        "anthropicApi": {
+          "id": "__CRED_ANTHROPIC_ID__",
+          "name": "ANTHROPIC_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        2448,
+        3104
+      ],
+      "id": "ff7ca604-e9a7-4965-9a3e-a70d0eb8a0d5",
+      "name": "Simple Memory1"
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "text": "=Analise esta imagem extraída de um documento PDF.\n\nContexto:\n{{ $json.prompt_context }}\n\nSua tarefa — seja extremamente preciso:\n\n1. GRÁFICOS: Identifique o tipo (barra, linha, pizza, etc.), descreva TODOS os eixos com unidades, liste TODOS os data points e valores visíveis, descreva tendências e conclusões. Transcreva números EXATAMENTE como aparecem.\n\n2. TABELAS: Transcreva a tabela COMPLETA em formato markdown com todas as linhas e colunas. Não omita nenhum dado. Preserve formatação numérica original.\n\n3. IMAGENS/DIAGRAMAS: Descreva o conteúdo, relações, fluxos, cores significativas, e qualquer informação textual presente.\n\n4. FÓRMULAS: Transcreva em LaTeX ou texto, com descrição do que calculam.\n\nRetorne uma descrição completa e autocontida — alguém deve conseguir entender o conteúdo sem ver a imagem original.",
+        "inputType": "binary",
+        "binaryPropertyName": "image",
+        "simplify": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -352,
+        2384
+      ],
+      "id": "64cb8d91-334e-4e76-bb92-a845a54f4a2a",
+      "name": "Analyze an image",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "__CRED_GOOGLE_GEMINI_ID__",
+          "name": "GOOGLE_GEMINI_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "modelId": {
+          "__rl": true,
+          "value": "qwen3.5:397b",
+          "mode": "list",
+          "cachedResultName": "qwen3.5:397b"
+        },
+        "text": "=Analise esta imagem extraída de um documento PDF.\n\nContexto:\n{{ $json.prompt_context }}\n\nSua tarefa — seja extremamente preciso:\n\n1. GRÁFICOS: Identifique o tipo (barra, linha, pizza, etc.), descreva TODOS os eixos com unidades, liste TODOS os data points e valores visíveis, descreva tendências e conclusões. Transcreva números EXATAMENTE como aparecem.\n\n2. TABELAS: Transcreva a tabela COMPLETA em formato markdown com todas as linhas e colunas. Não omita nenhum dado. Preserve formatação numérica original.\n\n3. IMAGENS/DIAGRAMAS: Descreva o conteúdo, relações, fluxos, cores significativas, e qualquer informação textual presente.\n\n4. FÓRMULAS: Transcreva em LaTeX ou texto, com descrição do que calculam.\n\nRetorne uma descrição completa e autocontida — alguém deve conseguir entender o conteúdo sem ver a imagem original.",
+        "binaryPropertyName": "image",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.ollama",
+      "typeVersion": 1,
+      "position": [
+        -512,
+        2512
+      ],
+      "id": "93fd57ca-0117-4865-87bd-888c5fff0412",
+      "name": "Analyze image",
+      "credentials": {
+        "ollamaApi": {
+          "id": "__CRED_OLLAMA_ID__",
+          "name": "OLLAMA_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $node[\"When chat message received\"].json[\"chatInput\"] }}",
+        "options": {
+          "systemMessage": "=Voce e um assistente especializado em analise de dados do mercado de trabalho brasileiro.\nVoce tem acesso a uma ferramenta de busca em base de conhecimento. USE-A SEMPRE antes de responder.\n\nInstrucoes:\n\n1. BUSCA OBRIGATORIA: Antes de responder, consulte a base de conhecimento usando a ferramenta disponivel. Faca quantas buscas forem necessarias para cobrir todos os aspectos da pergunta.\n\n2. PRECISAO NUMERICA: Cite numeros exatos como aparecem nos documentos recuperados (valores, percentuais, quantidades). Nao arredonde nem aproxime.\n\n3. CITACAO DE FONTES: Para cada dado ou afirmacao, indique a fonte (nome do documento, secao, tabela ou figura de onde extraiu a informacao).\n\n4. COMPLETUDE: Responda todos os aspectos da pergunta. Se a pergunta pede multiplos dados, forneca cada um deles. Se uma busca nao retornou tudo, faca buscas adicionais com termos diferentes.\n\n5. ESTRUTURA: Organize a resposta com topicos ou marcadores quando houver multiplos pontos a abordar.\n\n6. HONESTIDADE: Baseie sua resposta EXCLUSIVAMENTE nos resultados retornados pela ferramenta de busca. Se os resultados nao contiverem informacoes suficientes, responda: \"Nao encontrei uma resposta nos documentos disponiveis.\" Nao utilize conhecimentos externos, nao faca suposicoes nem invente informacoes.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        2400,
+        2864
+      ],
+      "id": "e060ce0b-d4f4-4652-b8fb-a672c7c1ba31",
+      "name": "Agente - Gemini",
+      "retryOnFail": false,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-embedding-001"
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        2576,
+        3264
+      ],
+      "id": "202fccff-1bc0-4f9e-8260-57ad9a49d9be",
+      "name": "Embeddings Google Gemini",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "__CRED_GOOGLE_GEMINI_ID__",
+          "name": "GOOGLE_GEMINI_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        2288,
+        3104
+      ],
+      "id": "49cef817-71cf-4db7-955e-750bbbed0a33",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "__CRED_GOOGLE_GEMINI_ID__",
+          "name": "GOOGLE_GEMINI_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        2688,
+        1488
+      ],
+      "id": "6b909c2b-6971-4a45-b744-936777bf106f",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        2528,
+        1488
+      ],
+      "id": "afcbde3f-e0fc-4b5d-a54b-da3cefc27c8d",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "__CRED_GOOGLE_GEMINI_ID__",
+          "name": "GOOGLE_GEMINI_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Chat - Rag - Ollama",
+        "height": 592,
+        "width": 736,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2176,
+        4128
+      ],
+      "typeVersion": 1,
+      "id": "48d9bd48-186d-4362-8bdb-6d431a20806e",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Busca documentos sobre o mercado de trabalho brasileiro (Novo CAGED) incluindo saldos de emprego, admissões, desligamentos, salários e dados por UF/setor.",
+        "qdrantCollection": {
+          "__rl": true,
+          "value": "=QDRANT_COLLECTION_OLLAMA",
+          "mode": "id"
+        },
+        "topK": 8,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "typeVersion": 1.3,
+      "position": [
+        2560,
+        4416
+      ],
+      "id": "89031f72-6ba7-413e-9b45-36f40f6efe3b",
+      "name": "Store - Tool2",
+      "credentials": {
+        "qdrantApi": {
+          "id": "__CRED_QDRANT_API_ID__",
+          "name": "QDRANT_API_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        2432,
+        4416
+      ],
+      "id": "f7a0594a-6621-457d-b4f7-da8d8bec557b",
+      "name": "Simple Memory3"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $node[\"When chat message received\"].json[\"chatInput\"] }}",
+        "options": {
+          "systemMessage": "=Voce e um assistente especializado em analise de dados do mercado de trabalho brasileiro.\nVoce tem acesso a uma ferramenta de busca em base de conhecimento. USE-A SEMPRE antes de responder.\n\nInstrucoes:\n\n1. BUSCA OBRIGATORIA: Antes de responder, consulte a base de conhecimento usando a ferramenta disponivel. Faca quantas buscas forem necessarias para cobrir todos os aspectos da pergunta.\n\n2. PRECISAO NUMERICA: Cite numeros exatos como aparecem nos documentos recuperados (valores, percentuais, quantidades). Nao arredonde nem aproxime.\n\n3. CITACAO DE FONTES: Para cada dado ou afirmacao, indique a fonte (nome do documento, secao, tabela ou figura de onde extraiu a informacao).\n\n4. COMPLETUDE: Responda todos os aspectos da pergunta. Se a pergunta pede multiplos dados, forneca cada um deles. Se uma busca nao retornou tudo, faca buscas adicionais com termos diferentes.\n\n5. ESTRUTURA: Organize a resposta com topicos ou marcadores quando houver multiplos pontos a abordar.\n\n6. HONESTIDADE: Baseie sua resposta EXCLUSIVAMENTE nos resultados retornados pela ferramenta de busca. Se os resultados nao contiverem informacoes suficientes, responda: \"Nao encontrei uma resposta nos documentos disponiveis.\" Nao utilize conhecimentos externos, nao faca suposicoes nem invente informacoes.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        2384,
+        4176
+      ],
+      "id": "a3aa2da6-8ffb-4f29-a930-c4707d4ba6dd",
+      "name": "Agente - Ollama",
+      "retryOnFail": false,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "model": "qwen3.5:397b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        2256,
+        4384
+      ],
+      "id": "4b5b5f52-b9d6-4c98-bed9-03ad79478d8f",
+      "name": "Ollama Chat Model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "__CRED_OLLAMA_ID__",
+          "name": "OLLAMA_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Chat - Sem Rag - Anthropic",
+        "height": 464,
+        "width": 512
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2400,
+        1712
+      ],
+      "typeVersion": 1,
+      "id": "68ab8e5a-5b1c-4e83-8aaf-bcb5b524f997",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        2688,
+        1984
+      ],
+      "id": "e39dc56a-bfcf-4386-b6dc-9b7196010316",
+      "name": "Simple Memory4"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $node[\"When chat message received\"].json[\"chatInput\"] }}",
+        "options": {
+          "systemMessage": "=Voce e um assistente especializado em analise de dados do mercado de trabalho brasileiro.\nResponda as perguntas usando APENAS as informacoes disponiveis nos documentos fornecidos.\n\nDocumentos: {{ $json.data }}\n\nInstrucoes:\n\n1. PRECISAO NUMERICA: Cite numeros exatos como aparecem nos documentos (valores, percentuais, quantidades). Nao arredonde nem aproxime.\n\n2. CITACAO DE FONTES: Para cada dado ou afirmacao, indique a fonte (nome do documento, secao, tabela ou figura de onde extraiu a informacao).\n\n3. COMPLETUDE: Responda todos os aspectos da pergunta. Se a pergunta pede multiplos dados, forneca cada um deles.\n\n4. ESTRUTURA: Organize a resposta com topicos ou marcadores quando houver multiplos pontos a abordar.\n\n5. HONESTIDADE: Se os documentos nao contiverem informacoes suficientes para responder a pergunta, responda exatamente com: \"Nao encontrei uma resposta nos documentos disponiveis.\" Nao utilize conhecimentos externos, nao faca suposicoes nem invente informacoes.\n",
+          "passthroughBinaryImages": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        2592,
+        1264
+      ],
+      "id": "31e46d0e-2fb6-4a6c-ba46-0fe8c0d33f78",
+      "name": "Agente - Sem Rag - Gemini",
+      "retryOnFail": false,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $node[\"When chat message received\"].json[\"chatInput\"] }}",
+        "options": {
+          "systemMessage": "=Voce e um assistente especializado em analise de dados do mercado de trabalho brasileiro.\nResponda as perguntas usando APENAS as informacoes disponiveis nos documentos fornecidos.\n\nDocumentos: {{ $json.data }}\n\nInstrucoes:\n\n1. PRECISAO NUMERICA: Cite numeros exatos como aparecem nos documentos (valores, percentuais, quantidades). Nao arredonde nem aproxime.\n\n2. CITACAO DE FONTES: Para cada dado ou afirmacao, indique a fonte (nome do documento, secao, tabela ou figura de onde extraiu a informacao).\n\n3. COMPLETUDE: Responda todos os aspectos da pergunta. Se a pergunta pede multiplos dados, forneca cada um deles.\n\n4. ESTRUTURA: Organize a resposta com topicos ou marcadores quando houver multiplos pontos a abordar.\n\n5. HONESTIDADE: Se os documentos nao contiverem informacoes suficientes para responder a pergunta, responda exatamente com: \"Nao encontrei uma resposta nos documentos disponiveis.\" Nao utilize conhecimentos externos, nao faca suposicoes nem invente informacoes.\n",
+          "passthroughBinaryImages": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        2592,
+        1776
+      ],
+      "id": "dc98a394-b512-4d31-b8e0-4cba505e8571",
+      "name": "Agente - Sem Rag - Anthropic",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "claude-sonnet-4-6",
+          "mode": "list",
+          "cachedResultName": "Claude Sonnet 4.6"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [
+        2528,
+        1984
+      ],
+      "id": "06430354-d8e5-48fc-a4d1-55ee4f5a7839",
+      "name": "Anthropic Chat Model1",
+      "credentials": {
+        "anthropicApi": {
+          "id": "__CRED_ANTHROPIC_ID__",
+          "name": "ANTHROPIC_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Chat - Sem Rag - Ollama",
+        "height": 464,
+        "width": 512,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2400,
+        2224
+      ],
+      "typeVersion": 1,
+      "id": "fdc7da3c-ef0e-4bab-b8a9-e9853f51e519",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        2688,
+        2496
+      ],
+      "id": "f8e0a951-c8af-45c7-b9ea-88044a67eefc",
+      "name": "Simple Memory5"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $node[\"When chat message received\"].json[\"chatInput\"] }}",
+        "options": {
+          "systemMessage": "=Voce e um assistente especializado em analise de dados do mercado de trabalho brasileiro.\nResponda as perguntas usando APENAS as informacoes disponiveis nos documentos fornecidos.\n\nDocumentos: {{ $json.data }}\n\nInstrucoes:\n\n1. PRECISAO NUMERICA: Cite numeros exatos como aparecem nos documentos (valores, percentuais, quantidades). Nao arredonde nem aproxime.\n\n2. CITACAO DE FONTES: Para cada dado ou afirmacao, indique a fonte (nome do documento, secao, tabela ou figura de onde extraiu a informacao).\n\n3. COMPLETUDE: Responda todos os aspectos da pergunta. Se a pergunta pede multiplos dados, forneca cada um deles.\n\n4. ESTRUTURA: Organize a resposta com topicos ou marcadores quando houver multiplos pontos a abordar.\n\n5. HONESTIDADE: Se os documentos nao contiverem informacoes suficientes para responder a pergunta, responda exatamente com: \"Nao encontrei uma resposta nos documentos disponiveis.\" Nao utilize conhecimentos externos, nao faca suposicoes nem invente informacoes.\n",
+          "passthroughBinaryImages": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        2592,
+        2288
+      ],
+      "id": "27ec7da2-da9c-484f-b46f-7a22a2de8cc3",
+      "name": "Agente - Sem Rag - Ollama",
+      "retryOnFail": false,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "model": "qwen3.5:397b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        2528,
+        2496
+      ],
+      "id": "9f0449ae-6a0e-4ea1-bbd3-c5a85afc1722",
+      "name": "Ollama Chat Model1",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "ollamaApi": {
+          "id": "__CRED_OLLAMA_ID__",
+          "name": "OLLAMA_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-embedding-001"
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        192,
+        2976
+      ],
+      "id": "07d8b62f-5bf0-4155-8cf2-b4f0de951788",
+      "name": "Embeddings Google Gemini1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "__CRED_GOOGLE_GEMINI_ID__",
+          "name": "GOOGLE_GEMINI_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Chat\n",
+        "height": 720,
+        "width": 896,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1136,
+        2400
+      ],
+      "typeVersion": 1,
+      "id": "3ea875d4-1ed3-4da6-86bd-dedb429e06c5",
+      "name": "Sticky Note7"
+    },
+    {
+      "parameters": {
+        "content": "# Gabarito — Novo CAGED\n\n---\n\n## Sumário Executivo jan–dez 2025\n\n---\n\n### Q1 — Saldo acumulado 2025 + maior setor\n\n    ** Qual foi o saldo total de empregos formais no acumulado de janeiro a dezembro de 2025 segundo o Novo CAGED, e qual setor econômico teve o maior saldo positivo ?**\n\n        O saldo total de empregos formais no acumulado de janeiro a dezembro de 2025 foi de ** +1.279.498 ** postos de trabalho, resultado de ** 26.599.698 ** admissões e ** 25.320.179 ** desligamentos.O setor com maior saldo positivo foi ** Serviços **, com **+758.355 ** postos.Os demais setores registraram: Comércio(**+247.097 **), Indústria(**+144.319 **), Construção(**+87.878 **) e Agropecuária(**+41.870 **).\n\n| Setor | Saldo |\n| ---| ---|\n| Serviços | **+758.355 ** |\n| Comércio | +247.097 |\n| Indústria | +144.319 |\n| Construção | +87.878 |\n| Agropecuária | +41.870 |\n| ** Total ** | ** +1.279.498 ** |\n\n> Fonte: Sumário Executivo do Novo CAGED, referência janeiro a dezembro de 2025.\n\n---\n\n### Q2 — Saldo de dezembro de 2025 + todos os grupamentos negativos\n\n    ** Qual foi o saldo de empregos formais em dezembro de 2025 segundo o Novo CAGED, e todos os grupamentos econômicos registraram saldo negativo nesse mês ?**\n\n        Em dezembro de 2025, o emprego celetista no Brasil registrou ** redução de - 618.164 ** postos de trabalho, resultado de ** 1.523.309 ** admissões e ** 2.141.473 ** desligamentos.Todos os cinco grandes grupamentos registraram saldos negativos.O estoque total de vínculos celetistas ativos foi de ** 48.474.348 ** vínculos(** -1, 26 %** em relação ao mês anterior).\n\n| Grupamento | Saldo |\n| ---| ---|\n| Serviços | **-280.810 ** |\n| Indústria Geral | -135.087 |\n| Construção | -104.077 |\n| Comércio | -54.355 |\n| Agropecuária | -43.836 |\n| ** Total ** | **-618.164 ** |\n\n> Fonte: Sumário Executivo do Novo CAGED, referência dezembro de 2025.\n\n---\n\n### Q3 — Desempenho regional acumulado 2025\n\n    ** No acumulado de janeiro a dezembro de 2025, qual região brasileira registrou o maior saldo de empregos formais e qual registrou o menor ? Todas as regiões registraram saldo positivo ?**\n\n        Todas as cinco regiões registraram saldos positivos.A região ** Sudeste ** liderou com **+504.972 ** postos e o ** Norte ** registrou o menor saldo absoluto.Todas as 27 UFs também tiveram saldo positivo.\n\n| Região | Saldo | Variação |\n| ---| ---| ---|\n| Sudeste | **+504.972 ** | +2, 10 % |\n| Nordeste | +347.940 | +4, 38 % |\n| Sul | +186.126 | +2, 16 % |\n| Centro - Oeste | +149.530 | +3, 56 % |\n| Norte | +90.613 | +3, 81 % |\n\n> Fonte: Sumário Executivo do Novo CAGED, referência janeiro a dezembro de 2025.\n\n---\n\n### Q4 — Salário médio de admissão acumulado 2025\n\n    ** Qual foi o salário médio de admissão no acumulado de janeiro a dezembro de 2025 e qual a variação real em relação ao mesmo período de 2024 ? Qual grupamento pagou o maior salário médio de admissão ?**\n\n        O salário médio de admissão foi de ** R$ 2.294, 62 **, com variação real de ** +1, 40 %** (** +R$ 31, 77 **) frente a 2024, deflacionado pelo INPC.O grupamento com maior valor foi ** Administração pública, defesa, seguridade social, educação, saúde humana e serviços sociais ** (** R$ 2.496, 72 **). O menor foi Alojamento e alimentação(** R$ 1.895,02 **).\n\n| Grupamento | Salário médio |\n| ---| ---|\n| Adm.pública / saúde / educação | ** R$ 2.496, 72 ** |\n| Construção | R$ 2.476, 70 |\n| Média geral | R$ 2.294, 62 |\n| Comércio | R$ 2.031,02 |\n| Alojamento e alimentação | R$ 1.895,02 |\n\n> Fonte: Sumário Executivo do Novo CAGED, referência janeiro a dezembro de 2025.\n\n---\n\n### Q5 — Saldo por sexo e faixa etária acumulado 2025\n\n    ** No acumulado de janeiro a dezembro de 2025, como o saldo de empregos formais se distribuiu por sexo ? E qual faixa etária concentrou o maior saldo positivo ?**\n\n        Do saldo total de ** +1.279.498 ** postos, **+720.385 ** corresponderam a ** mulheres ** e **+559.113 ** a ** homens **.A faixa etária com maior saldo foi ** 18 a 24 anos ** (** +1.019.823 **). A faixa de 30 anos ou mais foi a única com saldo negativo.\n\n| Faixa etária | Saldo |\n| ---| ---|\n| 18 a 24 anos | ** +1.019.823 ** |\n| Até 17 anos | +339.373 |\n| 25 a 29 anos | +65.991 |\n| 30 anos ou mais | **-145.689 ** |\n\n> Fonte: Sumário Executivo do Novo CAGED, referência janeiro a dezembro de 2025.\n\n---\n\n### Q6 — Grau de instrução acumulado 2025\n\n    ** No acumulado de janeiro a dezembro de 2025, qual grau de instrução concentrou o maior saldo positivo de empregos formais ? Houve algum grau de instrução com saldo negativo ?**\n\n        O maior saldo foi de ** Ensino Médio Completo ** (** +1.064.221 **). O único grau com saldo negativo foi ** Fundamental Completo ** (**-15.296 **).\n\n| Grau de instrução | Saldo |\n| ---| ---|\n| Médio Completo | ** +1.064.221 ** |\n| Médio Incompleto | +159.792 |\n| Superior Incompleto | +37.881 |\n| Superior Completo | +24.513 |\n| Fundamental Incompleto | +4.785 |\n| Analfabeto | +3.602 |\n| Fundamental Completo | **-15.296 ** |\n\n> Fonte: Sumário Executivo do Novo CAGED, referência janeiro a dezembro de 2025.\n\n---\n\n### Q7 — Evolução mensal do saldo em 2025\n\n    ** De acordo com o gráfico de evolução do saldo no Sumário Executivo de janeiro a dezembro de 2025, qual foi o mês com maior saldo positivo e qual foi o único mês com saldo negativo ?**\n\n        O mês com maior saldo positivo foi ** fevereiro de 2025 ** (**+438.107 ** postos).O único mês com saldo negativo foi ** dezembro de 2025 ** (**-618.164 ** postos).\n\n| | Mês | Saldo |\n| ---| ---| ---|\n| Maior positivo | Fevereiro / 2025 | **+438.107 ** |\n| Único negativo | Dezembro / 2025 | **-618.164 ** |\n\n> Fonte: Sumário Executivo do Novo CAGED, referência janeiro a dezembro de 2025.\n\n---\n\n### Q8 — Regiões e UFs: saldo absoluto e variação relativa acumulado 2025\n\n    ** No acumulado de janeiro a dezembro de 2025, qual região teve o maior saldo absoluto, qual teve a maior variação relativa, e quais foram as UFs com maior e menor saldo absoluto ?**\n\n        A região ** Sudeste ** teve o maior saldo absoluto(**+504.972 **) e o ** Nordeste ** a maior variação relativa(** +4, 38 %**).Entre as UFs, ** São Paulo ** registrou o maior saldo(**+311.228 **) e ** Roraima ** o menor(**+2.568 **).\n\n| | Região / UF | Valor |\n| ---| ---| ---|\n| Maior saldo regional | Sudeste | **+504.972 ** |\n| Maior variação regional | Nordeste | ** +4, 38 %** |\n| Maior saldo por UF | São Paulo | **+311.228 ** |\n| Menor saldo por UF | Roraima | **+2.568 ** |\n\n> Fonte: Sumário Executivo do Novo CAGED, referência janeiro a dezembro de 2025.\n\n---\n\n### Q9 — Salário médio por setor e por UF acumulado 2025\n\n    ** Qual foi o salário médio de admissão no Brasil entre janeiro e dezembro de 2025, qual setor teve o maior salário médio de admissão e qual UF apresentou o maior valor ?**\n\n        O salário médio geral foi ** R$ 2.294, 62 **.O setor com maior valor foi ** Administração pública / saúde / educação ** (** R$ 2.496, 72 **). A UF com maior salário médio foi ** São Paulo ** (** R$ 2.597, 14 **).\n\n| | R$ |\n| ---| ---|\n| Média Brasil | R$ 2.294, 62 |\n| Maior setor(Adm.pública…) | ** R$ 2.496, 72 ** |\n| Maior UF(São Paulo) | ** R$ 2.597, 14 ** |\n\n> Fonte: Sumário Executivo do Novo CAGED, referência janeiro a dezembro de 2025.\n\n---\n\n### Q10 — Perfil individual: sexo, faixa etária, escolaridade e raça / cor acumulado 2025\n\n    ** Entre janeiro e dezembro de 2025, qual sexo apresentou maior saldo, qual faixa etária liderou, qual nível de escolaridade teve o maior saldo e qual raça / cor concentrou o maior saldo ?**\n\n| Dimensão | Líder | Saldo |\n| ---| ---| ---|\n| Sexo | Mulheres | **+720.385 ** |\n| Sexo | Homens | +559.113 |\n| Faixa etária | 18 a 24 anos | ** +1.019.823 ** |\n| Escolaridade | Ensino Médio Completo | ** +1.064.221 ** |\n| Raça / cor | Parda | ** +1.140.146 ** |\n\n> Fonte: Sumário Executivo do Novo CAGED, referência janeiro a dezembro de 2025.\n\n---\n\n### Q11 — Saldo de vínculos típicos e não típicos acumulado 2025\n\n    ** No acumulado de janeiro a dezembro de 2025, qual foi o saldo dos vínculos típicos e dos vínculos não típicos, e qual grupo respondeu pela maior parte do saldo ?**\n\n        Os vínculos ** típicos ** responderam pela maior parte do saldo(** +1.002.695 **), contra **+276.803 ** dos não típicos.\n\n| Tipo de vínculo | Saldo |\n| ---| ---|\n| Típicos | ** +1.002.695 ** |\n| Não típicos | +276.803 |\n| ** Total ** | ** +1.279.498 ** |\n\n> Fonte: Sumário Executivo do Novo CAGED, referência janeiro a dezembro de 2025.\n\n---\n\n## Apresentação de Principais Resultados — janeiro de 2026\n\n---\n\n### Q12 — Saldo de janeiro de 2026 + único grupamento negativo\n\n    ** Qual foi o saldo total de empregos formais em janeiro de 2026 e qual grupamento econômico registrou saldo negativo nesse mês ?**\n\n        Em janeiro de 2026, o saldo foi de **+112.334 ** postos(dados sem ajustes), com ** 2.208.030 ** admissões e ** 2.095.696 ** desligamentos.O único grupamento negativo foi o ** Comércio ** (**-56.800 **).\n\n| Grupamento | Saldo |\n| ---| ---|\n| Indústria | +54.991 |\n| Construção | +50.545 |\n| Serviços | +40.525 |\n| Agropecuária | +23.073 |\n| Comércio | **-56.800 ** |\n| ** Total ** | **+112.334 ** |\n\n> Fonte: Apresentação de Principais Resultados, janeiro de 2026.\n\n---\n\n### Q13 — Estoque jan / 2026: típicos e não típicos\n\n    ** Qual foi o estoque total de empregos formais recuperado para o CAGED em janeiro de 2026, e como esse estoque se divide entre vínculos típicos e não típicos ?**\n\n        O estoque total foi de ** 48.577.979 ** postos, dos quais ** 43.295.602 ** típicos e ** 5.282.377 ** não típicos.A base de comparação(RAIS 2024, sem estatutários) era de ** 46.145.193 ** postos.\n\n| Tipo | Estoque |\n| ---| ---|\n| Típicos | 43.295.602 |\n| Não típicos | 5.282.377 |\n| ** Total ** | ** 48.577.979 ** |\n| RAIS 2024(ref.) | 46.145.193 |\n\n> Fonte: Apresentação de Principais Resultados, janeiro de 2026.\n\n---\n\n### Q14 — Movimentações típicas e não típicas em jan / 2026 + definição\n\n    ** Com base nos dados de janeiro de 2026, como se dividem as admissões e desligamentos entre vínculos típicos e não típicos, e o que define um trabalhador \"não típico\" ?**\n\n        Das ** 2.208.030 ** admissões, ** 1.880.344 ** foram típicas e ** 327.686 ** não típicas.Dos ** 2.095.696 ** desligamentos, ** 1.815.092 ** foram típicos e ** 280.604 ** não típicos.São ** não típicos **: aprendizes, intermitentes, temporários, contratados por CAEPF e trabalhadores com carga horária até 30 horas.\n\n| | Típicos | Não típicos | Total |\n| ---| ---| ---| ---|\n| Admissões | 1.880.344 | 327.686 | ** 2.208.030 ** |\n| Desligamentos | 1.815.092 | 280.604 | ** 2.095.696 ** |\n| Saldo | +65.252 | +47.082 | **+112.334 ** |\n\n> Fonte: Apresentação de Principais Resultados, janeiro de 2026.\n\n---\n\n### Q15 — Top UFs jan / 2026 + comparação com jan / 2025\n\n    ** Quais foram as três Unidades Federativas com maior saldo positivo em janeiro de 2026, e qual registrou o maior saldo negativo ? Como o saldo total de janeiro de 2026 se compara ao de janeiro de 2025 ?**\n\n| UF | Saldo | Variação |\n| ---| ---| ---|\n| Santa Catarina | **+19.000 ** | +0, 72 % |\n| Mato Grosso | +18.731 | +1, 92 % |\n| Rio Grande do Sul | +18.421 | +0, 64 % |\n| Rio de Janeiro | **-13.009 ** | -0, 33 % |\n\n    Das 27 UFs, ** 18 registraram saldo positivo **.O saldo de jan / 2026(**+112.334 **) foi inferior ao de jan / 2025 com ajustes(**+154.396 **), queda de **-42.062 ** postos.\n\n> Fonte: Apresentação de Principais Resultados, janeiro de 2026.\n\n---\n\n### Q16 — Ranking completo de UFs em jan / 2026\n\n    ** Quantas UFs registraram saldo positivo em janeiro de 2026, quais foram as três com maior saldo e quais foram as três com menor saldo ?**\n\n** 18 das 27 UFs ** registraram saldo positivo.\n\n| Posição | UF | Saldo |\n| ---| ---| ---|\n| 1º maior | Santa Catarina | **+19.000 ** |\n| 2º maior | Mato Grosso | +18.731 |\n| 3º maior | Rio Grande do Sul | +18.421 |\n| 3º menor | Ceará | -1.291 |\n| 2º menor | Alagoas | -2.922 |\n| 1º menor | Rio de Janeiro | **-13.009 ** |\n\n> Fonte: Apresentação de Principais Resultados, janeiro de 2026.\n\n---\n\n## Nota Técnica — Novo CAGED(nov / 2021)\n\n---\n\n### Q17 — Sistema substituto e impacto do reprocessamento\n\n    ** Segundo a Nota Técnica do Novo CAGED(novembro de 2021), qual sistema substituiu o antigo CAGED como fonte principal de dados e qual foi o impacto percentual total do reprocessamento nas movimentações registradas ?**\n\n        O sistema substituto foi o ** eSocial ** (Decreto nº 8.373 / 2014), incorporado ao CAGED a partir de ** janeiro de 2020 **.O reprocessamento representou impacto de ** 2, 78 %** no total de movimentações: ** +1, 98 %** nas admissões e ** +3, 65 %** nos desligamentos.\n\n| Item | Valor |\n| ---| ---|\n| Sistema substituto | ** eSocial ** |\n| Decreto | nº 8.373 de 11 / 12 / 2014 |\n| Início no CAGED | Janeiro de 2020 |\n| Impacto total | ** 2, 78 %** das movimentações |\n| Impacto admissões | +1, 98 % |\n| Impacto desligamentos | +3, 65 % |\n\n> Fonte: Nota Técnica – Tratamentos aplicados nos dados do Novo CAGED, novembro de 2021.\n\n---\n\n### Q18 — Por que \"indicador híbrido\" e quais as três fontes\n\n    ** Por que o Novo CAGED é chamado de \"indicador híbrido\" e quais são as três fontes principais de dados utilizadas em sua composição desde 2020 ?**\n\n        É chamado de híbrido por combinar múltiplas fontes, diferindo da metodologia anterior que usava uma única via.As três fontes são:\n\n1. ** eSocial **\n    2. ** CAGED ** (sistema legado)\n3. ** Empregador Web **\n\n> Fonte: Nota Técnica – Tratamentos aplicados nos dados do Novo CAGED, novembro de 2021.\n\n---\n\n### Q19 — Incorporação de dados \"fora do prazo\"\n\n    ** Segundo a Nota Técnica, como funciona a incorporação de dados \"fora do prazo\" na série histórica do CAGED e qual o prazo regular para envio das declarações ?**\n\n        Declarações são consideradas ** dentro do prazo ** se informadas até o ** dia 15 do mês seguinte ** à competência(ex.: admissão em setembro → prazo até 15 de outubro).Movimentações informadas após esse período são incorporadas de forma ** retroativa e mensal ** à série histórica, metodologia mantida desde 2011.\n\n            > Fonte: Nota Técnica – Tratamentos aplicados nos dados do Novo CAGED, novembro de 2021.\n\n---\n\n### Q20 — Sistemas, aperfeiçoamentos metodológicos e impacto(out / 2021)\n\n    ** De acordo com a Nota Técnica do Novo CAGED, quais sistemas compõem o indicador durante o período de transição, quais foram os três aperfeiçoamentos metodológicos incorporados a partir de outubro de 2021 e qual foi o impacto percentual total ?**\n\n        O Novo CAGED é composto por ** eSocial, CAGED e Empregador Web **.Os três aperfeiçoamentos metodológicos de outubro de 2021 foram:\n\n1. Inclusão das declarações fora do prazo das empresas do ** grupo 3 do eSocial ** (a partir de maio / 2021)\n2. ** Exclusão de movimentações ** informadas equivocadamente\n3. ** Adequação na consolidação ** dos dados do eSocial com as declarações do sistema CAGED\n\nO impacto total foi de ** 2, 78 %** das movimentações: ** +1, 98 %** nas admissões e ** +3, 65 %** nos desligamentos.\n\n> Fonte: Nota Técnica – Tratamentos aplicados nos dados do Novo CAGED, novembro de 2021.\n ",
+        "height": 2000,
+        "width": 4416,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -2896,
+        -2704
+      ],
+      "typeVersion": 1,
+      "id": "72a35bee-8e25-473c-87f4-1585335c09b5",
+      "name": "Sticky Note8"
+    },
+    {
+      "parameters": {
+        "numberInputs": 6
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        3952,
+        2560
+      ],
+      "id": "2784bdd3-0461-4207-9d82-658195c918a3",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "content": "## RAG\n",
+        "height": 1024,
+        "width": 3056,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -2128,
+        2320
+      ],
+      "typeVersion": 1,
+      "id": "7de68685-12b4-422e-aa12-0ae258a69050",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1856,
+        2912
+      ],
+      "id": "02c33837-73d0-49c3-9179-a2cc3975f5e3",
+      "name": "Juntar1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ================================================================\n// PREPARADOR - Monta prompt de avaliação para o Agente Juiz\n// ================================================================\n\nconst GABARITO = $(\"Gabarito\").first().json;\n\nconst AGENT_MAP = [\n  { modelo: 'Gemini',    grupo: 'Sem RAG' },\n  { modelo: 'Anthropic', grupo: 'Sem RAG' },\n  { modelo: 'Ollama',    grupo: 'Sem RAG' },\n  { modelo: 'Gemini',    grupo: 'Com RAG' },\n  { modelo: 'Anthropic', grupo: 'Com RAG' },\n  { modelo: 'Ollama',    grupo: 'Com RAG' },\n];\n\n// ----------------------------------------------------------------\n// HELPERS\n// ----------------------------------------------------------------\n\nconst normalize = (s) =>\n  s.normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase().trim();\n\nfunction identificarPergunta(inputText) {\n  if (!inputText) return null;\n\n  const norm = normalize(inputText);\n  let melhorMatch = null;\n  let melhorScore = 0;\n\n  for (const [id, gab] of Object.entries(GABARITO)) {\n    const score = gab.keywords.filter(kw => norm.includes(normalize(kw))).length;\n\n    if (score > melhorScore) {\n      melhorScore = score;\n      melhorMatch = { id: Number(id), ...gab };\n    }\n  }\n\n  return melhorScore >= 2 ? melhorMatch : null;\n}\n\nfunction coletarRespostas(items) {\n  const respostas = [];\n  const indisponiveis = [];\n\n  for (let i = 0; i < items.length; i++) {\n    const meta = AGENT_MAP[i] ?? { modelo: `Agente_${i}`, grupo: 'Desconhecido' };\n    const resposta = (items[i].json.output ?? '').trim();\n\n    if (resposta) {\n      respostas.push({ ...meta, resposta });\n    } else {\n      indisponiveis.push(`${meta.modelo} (${meta.grupo})`);\n    }\n  }\n\n  return { respostas, indisponiveis };\n}\n\n// ----------------------------------------------------------------\n// MONTAGEM DO PROMPT\n// ----------------------------------------------------------------\n\nfunction montarSecaoGabarito(pergunta) {\n  return [\n    `## PERGUNTA AVALIADA`,\n    pergunta.pergunta,\n    ``,\n    `## GABARITO (RESPOSTA CORRETA)`,\n    pergunta.resposta_esperada,\n    ``,\n    `## DADOS-CHAVE ESPERADOS`,\n    ...pergunta.dados_chave.map(d => `- ${d}`),\n  ].join('\\n');\n}\n\nfunction montarSecaoSemGabarito(inputText) {\n  const gabaritosRef = Object.entries(GABARITO)\n    .map(([id, gab]) => `Pergunta ${id}: ${gab.pergunta}\\nResposta esperada: ${gab.resposta_esperada}`)\n    .join('\\n\\n');\n\n  return [\n    `## PERGUNTA DO USUARIO`,\n    inputText || '(nao identificada)',\n    ``,\n    `## NOTA: Pergunta nao corresponde ao banco de perguntas pre-definidas.`,\n    `Avalie as respostas com base na coerencia interna e qualidade geral.`,\n    ``,\n    `## GABARITOS DISPONIVEIS (para referencia)`,\n    gabaritosRef,\n  ].join('\\n');\n}\n\nfunction montarSecaoRespostas(respostas) {\n  const blocos = respostas\n    .map(r => `### ${r.modelo} (${r.grupo})\\n${r.resposta}`)\n    .join('\\n\\n---\\n\\n');\n\n  return `## RESPOSTAS DOS AGENTES PARA AVALIAR\\n\\n${blocos}`;\n}\n\nfunction montarSecaoIndisponiveis(indisponiveis) {\n  if (!indisponiveis.length) return '';\n\n  return [\n    `## AGENTES INDISPONIVEIS`,\n    ...indisponiveis.map(a => `- ${a}`),\n  ].join('\\n');\n}\n\n// ----------------------------------------------------------------\n// EXECUÇÃO\n// ----------------------------------------------------------------\n\nconst inputText = $('When chat message received').first().json.chatInput ?? '';\nconst pergunta  = identificarPergunta(inputText);\n\nconst { respostas, indisponiveis } = coletarRespostas($input.all());\n\nconst secoes = [\n  pergunta ? montarSecaoGabarito(pergunta) : montarSecaoSemGabarito(inputText),\n  montarSecaoRespostas(respostas),\n  montarSecaoIndisponiveis(indisponiveis),\n].filter(Boolean);\n\nconst promptJuiz = secoes.join('\\n\\n');\n\nreturn [{\n  json: {\n    prompt_avaliacao: promptJuiz,\n    pergunta_id: pergunta?.id ?? 0,\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4144,
+        2688
+      ],
+      "id": "9d869359-278c-40a3-a337-d535b855795e",
+      "name": "Preparador - Avaliacao AB1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.prompt_avaliacao }}",
+        "options": {
+          "systemMessage": "=# System Prompt — Agente Juiz de Avaliacao A/B\n\nVoce e um avaliador especialista em qualidade de respostas de LLMs sobre dados do mercado de trabalho brasileiro (Novo CAGED). Sua tarefa e avaliar rigorosamente as respostas de 6 agentes (3 Sem RAG, 3 Com RAG) comparando-as com o gabarito fornecido.\n\n## Metricas Obrigatorias\n\nPara CADA resposta de agente, avalie:\n\n### 1. TEN — Taxa de Erro Numerico (0% a 100%)\n- Compare TODOS os numeros da resposta com os documentos oficiais (nao apenas com o gabarito)\n- Numeros exatos: 0% de erro. Numeros aproximados (diferenca < 1%): erro parcial (50%). Numeros errados ou ausentes: 100% de erro\n- TEN = (soma dos erros numericos) / (total de dados numericos esperados) x 100\n- Exemplos: Se o documento oficial diz \"1.279.498\" e a resposta diz \"1.279.498\" = OK. Se diz \"1.280.000\" = erro parcial. Se diz \"1.300.000\" ou omite = erro total.\n\n### 2. TEF — Taxa de Erro Factual (0% a 100%)\n- Verifique cada afirmacao factual contra os documentos oficiais\n- Fato correto: 0%. Fato parcialmente correto: 50%. Fato errado ou inventado: 100%\n- TEF = (soma dos erros factuais) / (total de fatos verificaveis) x 100\n- Exemplos: Dizer que \"Servicos teve o maior saldo\" = correto. Dizer que \"Industria teve o maior saldo\" = erro factual.\n\n### 3. TSE — Taxa de Enunciados sem Evidencia (0% a 100%)\n- Identifique afirmacoes que NAO possuem referencia a fonte, documento ou dado verificavel\n- Enunciado com fonte citada (ex: \"segundo o Novo CAGED\", \"conforme a Nota Tecnica\"): OK\n- Enunciado factual sem qualquer referencia: sem evidencia\n- TSE = (enunciados sem evidencia) / (total de enunciados factuais) x 100\n\n### 4. Rubrica de Qualidade (1 a 5 para cada dimensao)\n- **Clareza**: Linguagem precisa, sem ambiguidades, facil de entender\n- **Estrutura**: Organizacao logica, uso de marcadores, paragrafos bem definidos\n- **Completude**: Cobre todos os dados-chave esperados dos documentos oficiais\n- **Utilidade**: A resposta seria util para um gestor publico tomar decisoes\n\n## Formato de Saida OBRIGATORIO\n\nResponda neste formato, mas converta para docs do google:\n\n## [Nome da Pergunta]\n\n### Verificacao do Gabarito\n- Dados confirmados nas fontes primarias: [listar]\n- Divergencias encontradas: [listar ou \"Nenhuma\"]\n\n### Metricas de Erro\n| Modelo | Grupo | TEN | TEF | TSE |\n|--------|-------|-----|-----|-----|\n| [modelo] | [grupo] | [X%] | [X%] | [X%] |\n[... uma linha por agente ...]\n\n### Rubrica de Qualidade (1-5)\n| Modelo | Grupo | Clareza | Estrutura | Completude | Utilidade | Media |\n|--------|-------|---------|-----------|------------|-----------|-------|\n| [modelo] | [grupo] | [1-5] | [1-5] | [1-5] | [1-5] | [X.X] |\n[... uma linha por agente ...]\n\n### Resumo Comparativo\n| Metrica | Sem RAG (media) | Com RAG (media) | Delta | Vencedor |\n|---------|-----------------|-----------------|-------|----------|\n| TEN | [X%] | [X%] | [X%] | [grupo] |\n| TEF | [X%] | [X%] | [X%] | [grupo] |\n| TSE | [X%] | [X%] | [X%] | [grupo] |\n| Qualidade | [X.X/5] | [X.X/5] | [X.X] | [grupo] |\n\n### Analise Detalhada\n\n**[Modelo] ([Grupo]):**\n- Acertos: [listar dados corretos]\n- Erros: [listar dados errados ou ausentes]\n- Evidencias: [listar fontes citadas ou ausencia]\n- Observacoes: [comentarios sobre qualidade]\n[... repetir para cada agente ...]\n\n### Conclusao\n[Paragrafo resumindo: qual abordagem (Sem RAG vs Com RAG) teve melhor desempenho, qual modelo se destacou, e recomendacao geral. Inclua o vencedor geral baseado na contagem de metricas vencidas (4 metricas total).]\n\n## Regras Importantes\n\n1. Seja RIGOROSO e IMPARCIAL — nao favoreca nenhum modelo ou abordagem\n2. Os documentos oficiais sao a fonte de verdade — o gabarito e apenas um guia inicial\n3. Se um agente inventou dados que nao existem nas fontes, isso e erro factual E enunciado sem evidencia\n4. Numeros aproximados contam como erro parcial, nao como acerto total\n5. Se um agente nao foi executado, registre \"N/A\" em todas as metricas\n6. As medias do resumo devem ser aritmeticas simples dos 3 modelos de cada grupo\n7. O vencedor de cada metrica e o grupo com MENOR taxa de erro (TEN, TEF, TSE) ou MAIOR qualidade\n8. Responda inteiramente em portugues\n9. NAO inclua as respostas completas dos agentes na sua avaliacao — apenas os pontos relevantes"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        4448,
+        2608
+      ],
+      "id": "02d4ddb8-0e0b-4e1c-89ec-6ecc8149ac0a",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        4448,
+        2832
+      ],
+      "id": "c83cca46-90f5-44b9-b234-53b9781e879f",
+      "name": "Google Gemini Chat Model3",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "__CRED_GOOGLE_GEMINI_ID__",
+          "name": "GOOGLE_GEMINI_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Respostas Avaliadas\n",
+        "height": 640,
+        "width": 1168,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3824,
+        2416
+      ],
+      "typeVersion": 1,
+      "id": "2182fabe-29bb-44b7-8d89-9b1864f7c1dd",
+      "name": "Sticky Note9"
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "returnAll": true,
+        "filter": {
+          "folderId": {
+            "__rl": true,
+            "value": "https://drive.google.com/drive/folders/GOOGLE_DRIVE_SOURCE_FOLDER_ID",
+            "mode": "url"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1296,
+        2448
+      ],
+      "id": "b89e3143-f3c3-47f0-b282-5767780e7a10",
+      "name": "Buscar Arquivos",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "__CRED_GOOGLE_DRIVE_ID__",
+          "name": "GOOGLE_DRIVE_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $json.id }}"
+        },
+        "options": {
+          "fileName": "={{ $json.name }}"
+        }
+      },
+      "id": "55786b20-51a5-4c5a-aec3-17242aac5fc3",
+      "name": "Download",
+      "type": "n8n-nodes-base.googleDrive",
+      "position": [
+        1488,
+        2448
+      ],
+      "typeVersion": 3,
+      "notesInFlow": true,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "__CRED_GOOGLE_DRIVE_ID__",
+          "name": "GOOGLE_DRIVE_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        1680,
+        2448
+      ],
+      "id": "c2c11b9e-053f-4da9-bdc4-7c4ec124ea73",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-embedding-001"
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        2560,
+        4576
+      ],
+      "id": "a3ad6920-fbb4-47af-8e1e-c0ab5d91c571",
+      "name": "Embeddings Google Gemini3",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "__CRED_GOOGLE_GEMINI_ID__",
+          "name": "GOOGLE_GEMINI_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "text"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1872,
+        2448
+      ],
+      "id": "7e41f25e-9aa0-4590-aa4e-b3a9b4a77b12",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nreturn { data: $input.first().json.text.join(`\\n\\n---DOCUMENTO---\\n\\n`) }"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1856,
+        2688
+      ],
+      "id": "a7792654-64cd-4046-a6e8-75eebc3902d7",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        4608,
+        2832
+      ],
+      "id": "e8b7aad2-0149-4995-9d90-4f1ec68b8d2b",
+      "name": "Simple Memory6"
+    },
+    {
+      "parameters": {
+        "jsCode": "const GABARITO = {\n    // ── Sumário Executivo jan–dez 2025 ──────────────────────────────────────\n    \"1\": {\n        \"pergunta\": \"Qual foi o saldo total de empregos formais no acumulado de janeiro a dezembro de 2025 segundo o Novo CAGED, e qual setor econômico teve o maior saldo positivo?\",\n        \"keywords\": [\"saldo\", \"total\", \"empregos\", \"formais\", \"acumulado\", \"janeiro\", \"dezembro\", \"novo\"],\n        \"resposta_esperada\": \"O saldo total de empregos formais no acumulado de janeiro a dezembro de 2025 foi de **+1.279.498** postos de trabalho, resultado de **26.599.698** admissões e **25.320.179** desligamentos. O setor com maior saldo positivo foi **Serviços**, com **+758.355** postos. Os demais setores registraram: Comércio (**+247.097**), Indústria (**+144.319**), Construção (**+87.878**) e Agropecuária (**+41.870**). Fonte: Sumário Executivo do Novo CAGED, referência janeiro a dezembro de 2025.\",\n        \"dados_chave\": [\n            \"Saldo acumulado 2025: **+1.279.498** postos\",\n            \"Admissões: **26.599.698**\",\n            \"Desligamentos: **25.320.179**\",\n            \"Serviços: **+758.355** (maior saldo)\",\n            \"Comércio: **+247.097**\",\n            \"Indústria: **+144.319**\",\n            \"Construção: **+87.878**\",\n            \"Agropecuária: **+41.870**\"\n        ]\n    },\n    \"2\": {\n        \"pergunta\": \"Qual foi o saldo de empregos formais em dezembro de 2025 segundo o Novo CAGED, e todos os grupamentos econômicos registraram saldo negativo nesse mês?\",\n        \"keywords\": [\"saldo\", \"empregos\", \"formais\", \"dezembro\", \"novo\", \"caged\", \"todos\", \"grupamentos\"],\n        \"resposta_esperada\": \"Em dezembro de 2025, o emprego celetista no Brasil registrou **redução de -618.164** postos de trabalho, resultado de **1.523.309** admissões e **2.141.473** desligamentos. Todos os cinco grandes grupamentos de atividades econômicas registraram saldos negativos: Serviços (**-280.810**), Indústria Geral (**-135.087**), Construção (**-104.077**), Comércio (**-54.355**) e Agropecuária (**-43.836**). O estoque total de vínculos celetistas ativos em dezembro de 2025 foi de **48.474.348** vínculos, variação de **-1,26%** em relação ao mês anterior. Fonte: Sumário Executivo do Novo CAGED, referência dezembro de 2025.\",\n        \"dados_chave\": [\n            \"Saldo dezembro/2025: **-618.164** postos\",\n            \"Admissões: **1.523.309**\",\n            \"Desligamentos: **2.141.473**\",\n            \"Serviços: **-280.810**\",\n            \"Indústria: **-135.087**\",\n            \"Construção: **-104.077**\",\n            \"Comércio: **-54.355**\",\n            \"Agropecuária: **-43.836**\",\n            \"Estoque dezembro/2025: **48.474.348** vínculos\"\n        ]\n    },\n    \"3\": {\n        \"pergunta\": \"No acumulado de janeiro a dezembro de 2025, qual região brasileira registrou o maior saldo de empregos formais e qual registrou o menor? Todas as regiões registraram saldo positivo?\",\n        \"keywords\": [\"acumulado\", \"janeiro\", \"dezembro\", \"região\", \"brasileira\", \"registrou\", \"maior\", \"saldo\"],\n        \"resposta_esperada\": \"No acumulado de janeiro a dezembro de 2025, todas as cinco regiões brasileiras registraram saldos positivos. A região **Sudeste** liderou com **+504.972** postos (**+2,10%**), seguida por Nordeste (**+347.940** / **+4,38%**), Sul (**+186.126** / **+2,16%**), Centro-Oeste (**+149.530** / **+3,56%**) e Norte (**+90.613** / **+3,81%**). A região com menor saldo absoluto foi o **Norte**. Em todas as 27 Unidades Federativas, os saldos foram positivos. Fonte: Sumário Executivo do Novo CAGED, referência janeiro a dezembro de 2025.\",\n        \"dados_chave\": [\n            \"Sudeste: **+504.972** (+2,10%) — maior saldo\",\n            \"Nordeste: **+347.940** (+4,38%)\",\n            \"Sul: **+186.126** (+2,16%)\",\n            \"Centro-Oeste: **+149.530** (+3,56%)\",\n            \"Norte: **+90.613** (+3,81%) — menor saldo\",\n            \"Todas as 27 UFs: saldos positivos\"\n        ]\n    },\n    \"4\": {\n        \"pergunta\": \"Qual foi o salário médio de admissão no acumulado de janeiro a dezembro de 2025 e qual a variação real em relação ao mesmo período de 2024? Qual grupamento pagou o maior salário médio de admissão?\",\n        \"keywords\": [\"salário\", \"médio\", \"admissão\", \"acumulado\", \"janeiro\", \"dezembro\", \"variação\", \"real\"],\n        \"resposta_esperada\": \"O salário médio de admissão no acumulado de 2025 foi de **R$ 2.294,62**, representando uma variação real de **+1,40%** (ou **+R$ 31,77**) em relação ao mesmo período de 2024, deflacionado pelo INPC. O grupamento com maior salário médio de admissão foi **Administração pública, defesa, seguridade social, educação, saúde humana e serviços sociais**, com **R$ 2.496,72** (variação de **-0,88%**). O setor de Alojamento e alimentação registrou o menor salário médio (**R$ 1.895,02**). Fonte: Sumário Executivo do Novo CAGED, referência janeiro a dezembro de 2025.\",\n        \"dados_chave\": [\n            \"Salário médio geral 2025: **R$ 2.294,62**\",\n            \"Variação real vs 2024: **+1,40%** / **+R$ 31,77**\",\n            \"Maior salário: Adm. pública/saúde/educação — **R$ 2.496,72**\",\n            \"Construção: **R$ 2.476,70**\",\n            \"Comércio: **R$ 2.031,02** (segundo menor)\",\n            \"Alojamento e alimentação: **R$ 1.895,02** (menor)\"\n        ]\n    },\n    \"5\": {\n        \"pergunta\": \"No acumulado de janeiro a dezembro de 2025, como o saldo de empregos formais se distribuiu por sexo? E qual faixa etária concentrou o maior saldo positivo?\",\n        \"keywords\": [\"acumulado\", \"janeiro\", \"dezembro\", \"saldo\", \"empregos\", \"formais\", \"distribuiu\", \"sexo\"],\n        \"resposta_esperada\": \"Do saldo total de **+1.279.498** postos no acumulado de 2025, **+720.385** corresponderam a **mulheres** e **+559.113** a **homens**, indicando que as mulheres representaram a maior parcela do saldo positivo. A faixa etária com maior saldo foi **18 a 24 anos**, com **+1.019.823** postos. A faixa de até 17 anos contribuiu com **+339.373**, a de 25 a 29 anos com **+65.991** e a de 30 anos ou mais registrou saldo **negativo de -145.689**. Fonte: Sumário Executivo do Novo CAGED, referência janeiro a dezembro de 2025.\",\n        \"dados_chave\": [\n            \"Saldo mulheres: **+720.385**\",\n            \"Saldo homens: **+559.113**\",\n            \"18 a 24 anos: **+1.019.823** (maior faixa)\",\n            \"Até 17 anos: **+339.373**\",\n            \"25 a 29 anos: **+65.991**\",\n            \"30 anos ou mais: **-145.689** (único negativo)\"\n        ]\n    },\n    \"6\": {\n        \"pergunta\": \"No acumulado de janeiro a dezembro de 2025, qual grau de instrução concentrou o maior saldo positivo de empregos formais? Houve algum grau de instrução com saldo negativo?\",\n        \"keywords\": [\"acumulado\", \"janeiro\", \"dezembro\", \"grau\", \"instrução\", \"concentrou\", \"maior\", \"saldo\"],\n        \"resposta_esperada\": \"No acumulado de 2025, o grau de instrução com maior saldo positivo foi **Ensino Médio Completo**, com **+1.064.221** postos. Os demais graus com saldo positivo foram: Médio Incompleto (**+159.792**), Superior Incompleto (**+37.881**), Superior Completo (**+24.513**), Analfabeto (**+3.602**) e Fundamental Incompleto (**+4.785**). O único grau com saldo **negativo** foi **Fundamental Completo**, com **-15.296** postos. Fonte: Sumário Executivo do Novo CAGED, referência janeiro a dezembro de 2025.\",\n        \"dados_chave\": [\n            \"Médio Completo: **+1.064.221** (maior saldo)\",\n            \"Médio Incompleto: **+159.792**\",\n            \"Superior Incompleto: **+37.881**\",\n            \"Superior Completo: **+24.513**\",\n            \"Fundamental Incompleto: **+4.785**\",\n            \"Analfabeto: **+3.602**\",\n            \"Fundamental Completo: **-15.296** (único negativo)\"\n        ]\n    },\n    \"7\": {\n        \"pergunta\": \"De acordo com o gráfico de evolução do saldo no Sumário Executivo de janeiro a dezembro de 2025, qual foi o mês com maior saldo positivo e qual foi o único mês com saldo negativo?\",\n        \"keywords\": [\"acordo\", \"gráfico\", \"evolução\", \"saldo\", \"sumário\", \"executivo\", \"janeiro\", \"dezembro\"],\n        \"resposta_esperada\": \"No gráfico de evolução do saldo em 2025, o mês com maior saldo positivo foi **fevereiro de 2025**, com **+438.107** postos [cite: sumario-executivo_2025 p.2]. O único mês com saldo negativo foi **dezembro de 2025**, com **-618.164** postos [cite: sumario-executivo_2025 p.2]. Isso indica que, no recorte do sumário anual, os onze primeiros meses foram positivos e dezembro concentrou a retração do ano [cite: sumario-executivo_2025 p.2].\",\n        \"dados_chave\": [\n            \"Maior saldo mensal positivo: **fevereiro/2025 = +438.107** [cite: sumario-executivo_2025 p.2]\",\n            \"Único mês negativo: **dezembro/2025 = -618.164** [cite: sumario-executivo_2025 p.2]\"\n        ]\n    },\n    \"8\": {\n        \"pergunta\": \"No acumulado de janeiro a dezembro de 2025, qual região teve o maior saldo absoluto, qual teve a maior variação relativa, e quais foram as UFs com maior e menor saldo absoluto?\",\n        \"keywords\": [\"acumulado\", \"janeiro\", \"dezembro\", \"região\", \"teve\", \"maior\", \"saldo\", \"absoluto\"],\n        \"resposta_esperada\": \"Entre as regiões brasileiras, a que teve o maior saldo absoluto em 2025 foi o **Sudeste**, com **+504.972** postos [cite: sumario-executivo_2025 p.4-5]. A maior variação relativa foi registrada no **Nordeste**, com **+4,38%** [cite: sumario-executivo_2025 p.4-5]. Entre as UFs, o maior saldo absoluto foi de **São Paulo**, com **+311.228** postos [cite: sumario-executivo_2025 p.4-5], enquanto o menor saldo absoluto foi de **Roraima**, com **+2.568** postos [cite: sumario-executivo_2025 p.4-5].\",\n        \"dados_chave\": [\n            \"Sudeste: **+504.972** [cite: sumario-executivo_2025 p.4-5]\",\n            \"Nordeste: **+4,38%** [cite: sumario-executivo_2025 p.4-5]\",\n            \"São Paulo: **+311.228** [cite: sumario-executivo_2025 p.4-5]\",\n            \"Roraima: **+2.568** [cite: sumario-executivo_2025 p.4-5]\"\n        ]\n    },\n    \"9\": {\n        \"pergunta\": \"Qual foi o salário médio de admissão no Brasil entre janeiro e dezembro de 2025, qual setor teve o maior salário médio de admissão e qual UF apresentou o maior valor?\",\n        \"keywords\": [\"salário\", \"médio\", \"admissão\", \"brasil\", \"entre\", \"janeiro\", \"dezembro\", \"setor\"],\n        \"resposta_esperada\": \"O salário médio de admissão no Brasil entre janeiro e dezembro de 2025 foi de **R$ 2.294,62** [cite: sumario-executivo_2025 p.6-7]. Entre os setores, o maior salário médio de admissão foi registrado em **Administração pública, defesa, seguridade social, educação, saúde humana e serviços sociais**, com **R$ 2.496,72** [cite: sumario-executivo_2025 p.6]. Entre as UFs, o maior valor foi o de **São Paulo**, com **R$ 2.597,14** [cite: sumario-executivo_2025 p.7].\",\n        \"dados_chave\": [\n            \"Brasil: **R$ 2.294,62** [cite: sumario-executivo_2025 p.6-7]\",\n            \"Setor com maior salário médio: **Administração pública... = R$ 2.496,72** [cite: sumario-executivo_2025 p.6]\",\n            \"UF com maior salário médio: **São Paulo = R$ 2.597,14** [cite: sumario-executivo_2025 p.7]\"\n        ]\n    },\n    \"10\": {\n        \"pergunta\": \"Entre janeiro e dezembro de 2025, qual sexo apresentou maior saldo, qual faixa etária liderou a geração de empregos, qual nível de escolaridade teve o maior saldo e qual raça/cor concentrou o maior saldo?\",\n        \"keywords\": [\"entre\", \"janeiro\", \"dezembro\", \"sexo\", \"apresentou\", \"maior\", \"saldo\", \"faixa\"],\n        \"resposta_esperada\": \"Entre janeiro e dezembro de 2025, as **mulheres** apresentaram o maior saldo, com **+720.385** postos, contra **+559.113** dos homens [cite: sumario-executivo_2025 p.7]. A faixa etária com maior saldo foi a de **18 a 24 anos**, com **+1.019.823** postos [cite: sumario-executivo_2025 p.7]. Em escolaridade, o maior saldo foi de **Ensino Médio Completo**, com **+1.064.221** postos [cite: sumario-executivo_2025 p.7]. Em raça/cor, o maior saldo foi da população **Parda**, com **+1.140.146** postos [cite: sumario-executivo_2025 p.7-8].\",\n        \"dados_chave\": [\n            \"Mulheres: **+720.385** [cite: sumario-executivo_2025 p.7]\",\n            \"Homens: **+559.113** [cite: sumario-executivo_2025 p.7]\",\n            \"18 a 24 anos: **+1.019.823** [cite: sumario-executivo_2025 p.7]\",\n            \"Ensino Médio Completo: **+1.064.221** [cite: sumario-executivo_2025 p.7]\",\n            \"Parda: **+1.140.146** [cite: sumario-executivo_2025 p.8]\"\n        ]\n    },\n    \"11\": {\n        \"pergunta\": \"No acumulado de janeiro a dezembro de 2025, qual foi o saldo dos vínculos típicos e dos vínculos não típicos, e qual grupo respondeu pela maior parte do saldo?\",\n        \"keywords\": [\"acumulado\", \"janeiro\", \"dezembro\", \"saldo\", \"vínculos\", \"típicos\", \"grupo\", \"respondeu\"],\n        \"resposta_esperada\": \"No acumulado de janeiro a dezembro de 2025, os vínculos **típicos** tiveram saldo de **+1.002.695** postos [cite: sumario-executivo_2025 p.8], enquanto os vínculos **não típicos** tiveram saldo de **+276.803** postos [cite: sumario-executivo_2025 p.8]. Assim, a maior parte do saldo total foi explicada pelos vínculos **típicos** [cite: sumario-executivo_2025 p.8].\",\n        \"dados_chave\": [\n            \"Típicos: **+1.002.695** [cite: sumario-executivo_2025 p.8]\",\n            \"Não típicos: **+276.803** [cite: sumario-executivo_2025 p.8]\",\n            \"Grupo predominante no saldo: **Típicos** [cite: sumario-executivo_2025 p.8]\"\n        ]\n    },\n\n    // ── Apresentação de Principais Resultados — janeiro de 2026 ─────────────\n    \"12\": {\n        \"pergunta\": \"Qual foi o saldo total de empregos formais em janeiro de 2026 e qual grupamento econômico registrou saldo negativo nesse mês?\",\n        \"keywords\": [\"saldo\", \"total\", \"empregos\", \"formais\", \"janeiro\", \"grupamento\", \"econômico\", \"registrou\"],\n        \"resposta_esperada\": \"Em janeiro de 2026, o saldo de empregos formais foi de **+112.334** postos (dados sem ajustes), resultado de **2.208.030** admissões e **2.095.696** desligamentos. O único grupamento com saldo negativo foi o **Comércio**, com **-56.800** postos. Os demais registraram saldos positivos: Indústria (**+54.991**), Construção (**+50.545**), Serviços (**+40.525**) e Agropecuária (**+23.073**). Fonte: Apresentação de Principais Resultados, janeiro de 2026.\",\n        \"dados_chave\": [\n            \"Saldo janeiro/2026: **+112.334** postos\",\n            \"Admissões: **2.208.030**\",\n            \"Desligamentos: **2.095.696**\",\n            \"Comércio: **-56.800** (único negativo)\",\n            \"Indústria: **+54.991**\",\n            \"Construção: **+50.545**\",\n            \"Serviços: **+40.525**\",\n            \"Agropecuária: **+23.073**\"\n        ]\n    },\n    \"13\": {\n        \"pergunta\": \"Qual foi o estoque total de empregos formais recuperado para o CAGED em janeiro de 2026, e como esse estoque se divide entre vínculos típicos e não típicos?\",\n        \"keywords\": [\"estoque\", \"total\", \"empregos\", \"formais\", \"recuperado\", \"caged\", \"janeiro\", \"divide\"],\n        \"resposta_esperada\": \"Em janeiro de 2026, o estoque total recuperado para o CAGED foi de **48.577.979** postos de trabalho. Desse total, **43.295.602** são considerados vínculos **típicos** e **5.282.377** são **não típicos** (aprendizes, intermitentes, temporários, contratados por CAEPF e com carga horária até 30 horas). Para referência, o estoque da RAIS 2024 (excluindo estatutários) era de **46.145.193** postos. Fonte: Apresentação de Principais Resultados, janeiro de 2026.\",\n        \"dados_chave\": [\n            \"Estoque total jan/2026: **48.577.979** postos\",\n            \"Típicos: **43.295.602**\",\n            \"Não típicos: **5.282.377**\",\n            \"Base de comparação (RAIS 2024): **46.145.193** (excluindo estatutários)\"\n        ]\n    },\n    \"14\": {\n        \"pergunta\": \"Com base nos dados de janeiro de 2026, como se dividem as admissões e desligamentos entre vínculos típicos e não típicos, e o que define um trabalhador \\\"não típico\\\" segundo a nota técnica?\",\n        \"keywords\": [\"base\", \"dados\", \"janeiro\", \"dividem\", \"admissões\", \"desligamentos\", \"entre\", \"vínculos\"],\n        \"resposta_esperada\": \"Em janeiro de 2026, o total de **2.208.030** admissões dividiu-se em **1.880.344** típicas e **327.686** não típicas[cite: 2366]. Os desligamentos somaram **2.095.696** (**1.815.092** típicos e **280.604** não típicos)[cite: 2366]. São considerados **não típicos** os trabalhadores aprendizes, intermitentes, temporários, contratados por CAEPF e com carga horária até 30 horas[cite: 2360, 2369].\",\n        \"dados_chave\": [\n            \"Saldo Típicos (Jan/26): **+65.252** [cite: 2366]\",\n            \"Saldo Não Típicos (Jan/26): **+47.082** [cite: 2366]\",\n            \"Definição Não Típicos: Aprendizes, intermitentes, temporários, CAEPF e <30h[cite: 2360, 2369].\"\n        ]\n    },\n    \"15\": {\n        \"pergunta\": \"Quais foram as três Unidades Federativas com maior saldo positivo em janeiro de 2026, e qual registrou o maior saldo negativo? Como o saldo total de janeiro de 2026 se compara ao de janeiro de 2025?\",\n        \"keywords\": [\"quais\", \"foram\", \"três\", \"unidades\", \"federativas\", \"maior\", \"saldo\", \"positivo\"],\n        \"resposta_esperada\": \"Em janeiro de 2026, as três UFs com **maior saldo positivo** foram: **Santa Catarina** (**+19.000** postos / +0,72%), **Mato Grosso** (**+18.731** / +1,92%) e **Rio Grande do Sul** (**+18.421** / +0,64%). A UF com **maior saldo negativo** foi o **Rio de Janeiro**, com **-13.009** postos (**-0,33%**). Das 27 UFs, 18 registraram saldo positivo. Em comparação, em janeiro de 2025 (dados com ajustes) o saldo havia sido de **+154.396** postos — portanto, janeiro de 2026 apresentou saldo **inferior** (**+112.334**), queda de aproximadamente **-42.062** postos em relação a janeiro de 2025. Fonte: Apresentação de Principais Resultados, janeiro de 2026.\",\n        \"dados_chave\": [\n            \"SC: **+19.000** (0,72%) — maior saldo jan/2026\",\n            \"MT: **+18.731** (1,92%)\",\n            \"RS: **+18.421** (0,64%)\",\n            \"RJ: **-13.009** (-0,33%) — maior saldo negativo\",\n            \"UFs com saldo positivo: **18 de 27**\",\n            \"Saldo jan/2025 (com ajustes): **+154.396**\",\n            \"Saldo jan/2026 (sem ajustes): **+112.334**\",\n            \"Variação: **-42.062** postos vs. jan/2025\"\n        ]\n    },\n    \"16\": {\n        \"pergunta\": \"Quantas UFs registraram saldo positivo em janeiro de 2026, quais foram as três com maior saldo e quais foram as três com menor saldo?\",\n        \"keywords\": [\"quantas\", \"registraram\", \"saldo\", \"positivo\", \"janeiro\", \"quais\", \"foram\", \"três\"],\n        \"resposta_esperada\": \"Em janeiro de 2026, **18 das 27 UFs** registraram saldo positivo [cite: apresentacao_jan_2026 p.14]. As três UFs com maior saldo foram **Santa Catarina (+19.000)**, **Mato Grosso (+18.731)** e **Rio Grande do Sul (+18.421)** [cite: apresentacao_jan_2026 p.14]. As três com menor saldo foram **Rio de Janeiro (-13.009)**, **Alagoas (-2.922)** e **Ceará (-1.291)** [cite: apresentacao_jan_2026 p.14].\",\n        \"dados_chave\": [\n            \"UFs com saldo positivo: **18 de 27** [cite: apresentacao_jan_2026 p.14]\",\n            \"Santa Catarina: **+19.000** [cite: apresentacao_jan_2026 p.14]\",\n            \"Mato Grosso: **+18.731** [cite: apresentacao_jan_2026 p.14]\",\n            \"Rio Grande do Sul: **+18.421** [cite: apresentacao_jan_2026 p.14]\",\n            \"Rio de Janeiro: **-13.009** [cite: apresentacao_jan_2026 p.14]\",\n            \"Alagoas: **-2.922** [cite: apresentacao_jan_2026 p.14]\",\n            \"Ceará: **-1.291** [cite: apresentacao_jan_2026 p.14]\"\n        ]\n    },\n\n    // ── Nota Técnica — Novo CAGED (nov/2021) ───────────────────────────────\n    \"17\": {\n        \"pergunta\": \"Segundo a Nota Técnica do Novo CAGED (novembro de 2021), qual sistema substituiu o antigo CAGED como fonte principal de dados e qual foi o impacto percentual total do reprocessamento nas movimentações registradas?\",\n        \"keywords\": [\"nota\", \"técnica\", \"novo\", \"caged\", \"novembro\", \"sistema\", \"substituiu\", \"antigo\"],\n        \"resposta_esperada\": \"O sistema que substituiu o CAGED tradicional foi o **eSocial** (Sistema de Escrituração Digital das Obrigações Fiscais, Previdenciárias e Trabalhistas), instituído pelo **Decreto nº 8.373, de 11 de dezembro de 2014**, com incorporação ao CAGED iniciada em **janeiro de 2020**. O Novo CAGED passou a ser um indicador **híbrido**, combinando dados do eSocial, do sistema legado do CAGED e do Empregador Web. O reprocessamento documentado na nota técnica representou um impacto de apenas **2,78%** no total de movimentações (entre janeiro/2020 e setembro/2021), com aumento de **1,98%** nas admissões e de **3,65%** nos desligamentos. Fonte: Nota Técnica – Tratamentos aplicados nos dados do Novo CAGED, novembro de 2021.\",\n        \"dados_chave\": [\n            \"Sistema substituto: **eSocial**\",\n            \"Decreto instituidor: **nº 8.373 de 11/12/2014**\",\n            \"Início no CAGED: **janeiro de 2020**\",\n            \"Impacto total do reprocessamento: **2,78%** das movimentações\",\n            \"Impacto nas admissões: **+1,98%**\",\n            \"Impacto nos desligamentos: **+3,65%**\"\n        ]\n    },\n    \"18\": {\n        \"pergunta\": \"Por que o Novo CAGED é chamado de \\\"indicador híbrido\\\" e quais são as três fontes principais de dados utilizadas em sua composição desde 2020?\",\n        \"keywords\": [\"novo\", \"caged\", \"chamado\", \"indicador\", \"híbrido\", \"quais\", \"três\", \"fontes\"],\n        \"resposta_esperada\": \"O indicador é chamado de híbrido pois utiliza uma complementação de fontes para sua produção, diferenciando-se da metodologia anterior que usava uma única via[cite: 3248]. As três fontes principais são: declarações realizadas diretamente no **eSocial**, declarações realizadas no sistema **CAGED** (antigo) e, para informações não encontradas nestes, dados do **Empregador Web**[cite: 3247, 3919].\",\n        \"dados_chave\": [\n            \"Conceito: Complementação de múltiplas fontes[cite: 3248].\",\n            \"Fontes: **eSocial**, **CAGED** e **Empregador Web**[cite: 3247, 3919].\"\n        ]\n    },\n    \"19\": {\n        \"pergunta\": \"Segundo a Nota Técnica, como funciona a incorporação de dados \\\"fora do prazo\\\" na série histórica do CAGED e qual o prazo regular para que as empresas enviem as declarações de movimentação?\",\n        \"keywords\": [\"nota\", \"técnica\", \"funciona\", \"incorporação\", \"dados\", \"fora\", \"prazo\", \"série\"],\n        \"resposta_esperada\": \"As declarações são consideradas dentro do prazo se informadas até o **dia 15 do mês seguinte** à competência (ex: admissão em setembro deve ser informada até 15 de outubro)[cite: 3239, 3240]. Movimentações informadas após esse período são consideradas \\\"fora do prazo\\\" e são incorporadas de forma **retroativa** à série histórica mensalmente, metodologia mantida no Novo CAGED desde 2011[cite: 3243, 3245, 3343].\",\n        \"dados_chave\": [\n            \"Prazo regular: Dia 15 do mês seguinte[cite: 3239, 3309].\",\n            \"Incorporação: Retroativa e mensal[cite: 3243, 3244, 3343].\"\n        ]\n    },\n    \"20\": {\n        \"pergunta\": \"De acordo com a Nota Técnica do Novo CAGED, quais sistemas compõem o indicador durante o período de transição, quais foram os três aperfeiçoamentos metodológicos incorporados a partir de outubro de 2021 e qual foi o impacto percentual total dessas alterações?\",\n        \"keywords\": [\"acordo\", \"nota\", \"técnica\", \"novo\", \"caged\", \"quais\", \"sistemas\", \"compõem\"],\n        \"resposta_esperada\": \"Durante o período de transição, o Novo CAGED passou a ser composto por informações captadas dos sistemas **eSocial, CAGED e Empregador Web** [cite: nota_tecnica_novo_caged p.2; sumario_executivo_dez_2025 p.10]. A Nota Técnica informa três aperfeiçoamentos metodológicos incorporados a partir de outubro de 2021: **(i) declaração fora do prazo das empresas do grupo 3 do eSocial a partir de maio de 2021; (ii) exclusão de movimentações informadas equivocadamente; (iii) adequação na consolidação dos dados do eSocial com as declarações feitas no sistema do CAGED** [cite: nota_tecnica_novo_caged p.2]. O impacto total dessas alterações foi de **2,78% do total de movimentações**, com **+1,98% nas admissões** e **+3,65% nos desligamentos** [cite: nota_tecnica_novo_caged p.2-3].\",\n        \"dados_chave\": [\n            \"Sistemas-fonte: **eSocial, CAGED e Empregador Web** [cite: nota_tecnica_novo_caged p.2; sumario_executivo_dez_2025 p.10]\",\n            \"Mudança 1: **declarações fora do prazo do grupo 3 do eSocial** [cite: nota_tecnica_novo_caged p.2]\",\n            \"Mudança 2: **exclusão de movimentações equivocadas** [cite: nota_tecnica_novo_caged p.2]\",\n            \"Mudança 3: **adequação da consolidação eSocial + CAGED** [cite: nota_tecnica_novo_caged p.2]\",\n            \"Impacto total: **2,78%** [cite: nota_tecnica_novo_caged p.2-3]\",\n            \"Impacto em admissões: **+1,98%** [cite: nota_tecnica_novo_caged p.3]\",\n            \"Impacto em desligamentos: **+3,65%** [cite: nota_tecnica_novo_caged p.3]\"\n        ]\n    }\n};\n\nreturn GABARITO;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4144,
+        2560
+      ],
+      "id": "115e5419-c878-4b8c-9b28-4dc2ddba1878",
+      "name": "Gabarito"
+    },
+    {
+      "parameters": {
+        "public": true,
+        "initialMessages": "={{`\nPerguntas: https://drive.google.com/drive/folders/GOOGLE_DRIVE_RESULTS_FOLDER_ID?usp=sharing\n`}}",
+        "options": {
+          "allowedOrigins": "*",
+          "showWelcomeScreen": true,
+          "subtitle": "={{`\nFonte de treinamento: https://drive.google.com/drive/folders/GOOGLE_DRIVE_SOURCE_FOLDER_ID\n`}}",
+          "title": "TCC de Modelos A/B"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        1296,
+        2672
+      ],
+      "id": "f55dd336-a6d1-42fe-963d-1045febd06c0",
+      "name": "When chat message received",
+      "webhookId": "__N8N_CHAT_WEBHOOK_ID__"
+    },
+    {
+      "parameters": {
+        "jsCode": "const { output } = $input.first().json\n\nreturn {\n  output\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3216,
+        1264
+      ],
+      "id": "0ac7470d-ac27-40c4-96b6-350f04139076",
+      "name": "Sem Rag - Gemini"
+    },
+    {
+      "parameters": {
+        "jsCode": "const { output } = $input.first().json\n\nreturn {\n  output\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3440,
+        4176
+      ],
+      "id": "3a419744-6252-47d9-8b48-e062bba24767",
+      "name": "Ollama"
+    },
+    {
+      "parameters": {
+        "jsCode": "const { output } = $input.first().json\n\nreturn {\n  output\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3392,
+        3520
+      ],
+      "id": "6960a259-ed90-416d-8157-c8c46bfa498a",
+      "name": "Anthropic"
+    },
+    {
+      "parameters": {
+        "jsCode": "const { output } = $input.first().json\n\nreturn {\n  output\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3344,
+        2864
+      ],
+      "id": "076cef0b-6e1f-495a-8266-a88375f38be2",
+      "name": "Gemini"
+    },
+    {
+      "parameters": {
+        "jsCode": "const { output } = $input.first().json\n\nreturn {\n  output\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3296,
+        2288
+      ],
+      "id": "a4ff5cf0-70b9-4273-b5a4-3617793e28b4",
+      "name": "Sem Rag - Ollama"
+    },
+    {
+      "parameters": {
+        "jsCode": "const { output } = $input.first().json\n\nreturn {\n  output\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3264,
+        1776
+      ],
+      "id": "3fbfbdd5-188b-4ffa-9dba-c5a607204a3d",
+      "name": "Sem Rag - Anthropic"
+    },
+    {
+      "parameters": {
+        "operation": "createFromText",
+        "content": "={{ $json.output }}",
+        "name": "={{ $('When chat message received').item.json.sessionId || \"teste\" }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "GOOGLE_DRIVE_RESULTS_FOLDER_ID",
+          "mode": "list",
+          "cachedResultName": "TCC - RESULTADOS",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/GOOGLE_DRIVE_RESULTS_FOLDER_ID"
+        },
+        "options": {
+          "convertToGoogleDocument": true
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        4768,
+        2608
+      ],
+      "id": "8c8be5b9-18e4-434b-808c-283e0159e3d5",
+      "name": "Create file from text",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "__CRED_GOOGLE_DRIVE_ID__",
+          "name": "GOOGLE_DRIVE_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        3648,
+        944
+      ],
+      "id": "6abba84a-5367-463e-8071-5c3e67a6b10d",
+      "name": "Juntar"
+    },
+    {
+      "parameters": {
+        "content": "## Chat - Rag - Anthropic",
+        "height": 592,
+        "width": 736
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2176,
+        3440
+      ],
+      "typeVersion": 1,
+      "id": "5efc4777-a508-4b72-82a0-db11a8a968d1",
+      "name": "Sticky Note10"
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Busca documentos sobre o mercado de trabalho brasileiro (Novo CAGED) incluindo saldos de emprego, admissões, desligamentos, salários e dados por UF/setor.",
+        "qdrantCollection": {
+          "__rl": true,
+          "value": "=QDRANT_COLLECTION_ANTHROPIC",
+          "mode": "id"
+        },
+        "topK": 8,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "typeVersion": 1.3,
+      "position": [
+        2560,
+        3728
+      ],
+      "id": "86267110-0352-43d5-8bc5-fb55a26f3d45",
+      "name": "Store - Tool3",
+      "credentials": {
+        "qdrantApi": {
+          "id": "__CRED_QDRANT_API_ID__",
+          "name": "QDRANT_API_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 3
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        2432,
+        3728
+      ],
+      "id": "040a0566-58c3-465c-829b-c4a00baef345",
+      "name": "Simple Memory7"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "claude-haiku-4-5-20251001",
+          "mode": "list",
+          "cachedResultName": "Claude Haiku 4.5"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [
+        2272,
+        3728
+      ],
+      "id": "11a8e019-e49d-4ec9-b975-689ee493a95b",
+      "name": "Anthropic Chat Model2",
+      "alwaysOutputData": false,
+      "retryOnFail": false,
+      "waitBetweenTries": 5000,
+      "executeOnce": false,
+      "credentials": {
+        "anthropicApi": {
+          "id": "__CRED_ANTHROPIC_ID__",
+          "name": "ANTHROPIC_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-embedding-001"
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        2560,
+        3904
+      ],
+      "id": "c55740cc-1cb4-499d-9c07-dd26e9508714",
+      "name": "Embeddings Google Gemini4",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "__CRED_GOOGLE_GEMINI_ID__",
+          "name": "GOOGLE_GEMINI_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $node[\"When chat message received\"].json[\"chatInput\"] }}",
+        "options": {
+          "systemMessage": "Voce e um assistente especializado em analise de dados do mercado de trabalho brasileiro.\nVoce tem acesso a uma ferramenta de busca em base de conhecimento. USE-A SEMPRE antes de responder.\n\nInstrucoes:\n\n1. BUSCA OBRIGATORIA: Antes de responder, consulte a base de conhecimento usando a ferramenta disponivel. Faca quantas buscas forem necessarias para cobrir todos os aspectos da pergunta.\n\n2. PRECISAO NUMERICA: Cite numeros exatos como aparecem nos documentos recuperados (valores, percentuais, quantidades). Nao arredonde nem aproxime.\n\n3. CITACAO DE FONTES: Para cada dado ou afirmacao, indique a fonte (nome do documento, secao, tabela ou figura de onde extraiu a informacao).\n\n4. COMPLETUDE: Responda todos os aspectos da pergunta. Se a pergunta pede multiplos dados, forneca cada um deles. Se uma busca nao retornou tudo, faca buscas adicionais com termos diferentes.\n\n5. ESTRUTURA: Organize a resposta com topicos ou marcadores quando houver multiplos pontos a abordar.\n\n6. HONESTIDADE: Baseie sua resposta EXCLUSIVAMENTE nos resultados retornados pela ferramenta de busca. Se os resultados nao contiverem informacoes suficientes, responda: \"Nao encontrei uma resposta nos documentos disponiveis.\" Nao utilize conhecimentos externos, nao faca suposicoes nem invente informacoes.\n",
+          "batching": {
+            "delayBetweenBatches": 65000
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        2384,
+        3488
+      ],
+      "id": "d3cc9b39-95f2-4e82-8572-8a019869242c",
+      "name": "Agente - Anthropic",
+      "retryOnFail": false,
+      "waitBetweenTries": 5000,
+      "alwaysOutputData": false,
+      "onError": "continueRegularOutput"
     }
-]
+  ],
+  "pinData": {},
+  "connections": {
+    "Iniciar Embeddings": {
+      "main": [
+        []
+      ]
+    },
+    "Store - Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agente - Gemini",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert to Qdrant": {
+      "main": [
+        [
+          {
+            "node": "Split in Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Arquivos2": {
+      "main": [
+        [
+          {
+            "node": "Download2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download2": {
+      "main": [
+        [
+          {
+            "node": "Enviar Arquivos - Mistral1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Data Loader1": {
+      "ai_document": [
+        [
+          {
+            "node": "Store - Embeddings1",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Quebrar texto1": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Data Loader1",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Arquivos - Mistral1": {
+      "main": [
+        [
+          {
+            "node": "Download OCR - Mistral1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar Arquivos - Mistral1": {
+      "main": [
+        [
+          {
+            "node": "Buscar Arquivos - Mistral1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download OCR - Mistral1": {
+      "main": [
+        [
+          {
+            "node": "Separar Texto e Imagens1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Collection": {
+      "main": [
+        []
+      ]
+    },
+    "Separar Texto e Imagens1": {
+      "main": [
+        [
+          {
+            "node": "Texto ou Imagem?1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Texto ou Imagem?1": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Store - Embeddings1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formatar Chunk Visual1": {
+      "main": [
+        [
+          {
+            "node": "Store - Embeddings1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete Collection": {
+      "main": [
+        []
+      ]
+    },
+    "Analyze Image - Anthropic1": {
+      "main": [
+        []
+      ]
+    },
+    "Simple Memory1": {
+      "ai_memory": [
+        [
+          {
+            "node": "Agente - Gemini",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze an image": {
+      "main": [
+        []
+      ]
+    },
+    "Analyze image": {
+      "main": [
+        []
+      ]
+    },
+    "Agente - Gemini": {
+      "main": [
+        [
+          {
+            "node": "Gemini",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Google Gemini": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Store - Tool",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Agente - Gemini",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Agente - Sem Rag - Gemini",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Agente - Sem Rag - Gemini",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store - Tool2": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agente - Ollama",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory3": {
+      "ai_memory": [
+        [
+          {
+            "node": "Agente - Ollama",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Agente - Ollama",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory4": {
+      "ai_memory": [
+        [
+          {
+            "node": "Agente - Sem Rag - Anthropic",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agente - Sem Rag - Gemini": {
+      "main": [
+        [
+          {
+            "node": "Sem Rag - Gemini",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Agente - Sem Rag - Anthropic",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory5": {
+      "ai_memory": [
+        [
+          {
+            "node": "Agente - Sem Rag - Ollama",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Agente - Sem Rag - Ollama",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agente - Sem Rag - Anthropic": {
+      "main": [
+        [
+          {
+            "node": "Sem Rag - Anthropic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agente - Sem Rag - Ollama": {
+      "main": [
+        [
+          {
+            "node": "Sem Rag - Ollama",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agente - Ollama": {
+      "main": [
+        [
+          {
+            "node": "Ollama",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Preparador - Avaliacao AB1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Gabarito",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Juntar1": {
+      "main": [
+        [
+          {
+            "node": "Agente - Ollama",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Agente - Gemini",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Agente - Anthropic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparador - Avaliacao AB1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Arquivos": {
+      "main": [
+        [
+          {
+            "node": "Download",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Google Gemini3": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Store - Tool2",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Google Gemini1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Store - Embeddings1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Agente - Sem Rag - Ollama",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Agente - Sem Rag - Anthropic",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Agente - Sem Rag - Gemini",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory6": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Create file from text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gabarito": {
+      "main": [
+        []
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Juntar1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Buscar Arquivos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sem Rag - Gemini": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sem Rag - Anthropic": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Sem Rag - Ollama": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Gemini": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Anthropic": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    },
+    "Ollama": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 5
+          }
+        ]
+      ]
+    },
+    "Juntar": {
+      "main": [
+        [
+          {
+            "node": "Sem Rag - Anthropic",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Sem Rag - Gemini",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Gemini",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Sem Rag - Ollama",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Ollama",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Anthropic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Anthropic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store - Tool3": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agente - Anthropic",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory7": {
+      "ai_memory": [
+        [
+          {
+            "node": "Agente - Anthropic",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Agente - Anthropic",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Google Gemini4": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Store - Tool3",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agente - Anthropic": {
+      "main": [
+        [
+          {
+            "node": "Anthropic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "ecf44bfe-db73-4b52-8b86-385680b75a86",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "__N8N_INSTANCE_ID__"
+  },
+  "id": "__N8N_WORKFLOW_ID__",
+  "tags": [
+    {
+      "updatedAt": "2026-03-01T20:13:12.064Z",
+      "createdAt": "2026-03-01T20:13:12.064Z",
+      "id": "__N8N_TAG_ID__",
+      "name": "TCC"
+    }
+  ]
+}
