@@ -52,7 +52,12 @@ Use apenas como referência de estrutura. Ao reproduzir, crie/copie para suas pr
 ## Figuras do projeto
 
 - A pasta `figuras/` centraliza os diagramas e imagens usados no trabalho.
-- Se sua cópia local estiver apenas com `.gitkeep`, adicione suas imagens exportadas nessa pasta mantendo nomes claros (ex.: `pipeline-geral.png`, `figura4-heatmap-ten.png`).
+- As imagens atuais padronizadas no repositório são:
+  - `figura_01_arquitetura_geral_pipeline.jpg`
+  - `figura_02_fluxo_macro_workflow_n8n.jpg`
+  - `figura_03_comparativo_metricas_sem_rag_vs_com_rag.jpg`
+  - `figura_04_matriz_ten_por_pergunta_e_cenario.jpeg`
+- Para novas imagens, mantenha o padrão `figura_XX_descricao_curta.ext` (sem espaços e sem acentos).
 - Os scripts em `scripts/` podem gerar artefatos visuais em `docs/artefatos/` para serem reutilizados nas figuras finais.
 
 ## Pré-requisitos
@@ -211,6 +216,32 @@ python scripts/convert_answer_key_pdf_to_markdown.py \
 - Verifique se os relatórios por questão foram gerados corretamente.
 - Verifique se os artefatos consolidados em `docs/artefatos/` estão coerentes.
 - Versione resultados e documentação sem incluir segredos.
+
+## Execução ponta a ponta (copiar e colar)
+
+Use o bloco abaixo como roteiro único para executar a preparação local dos scripts e gerar artefatos de consolidação após rodar o workflow no n8n:
+
+```bash
+pip install pypdf
+
+python scripts/aggregate_evaluation_results.py \
+  --input-dir resultados \
+  --output-dir docs/artefatos
+
+python scripts/build_appendix_a_from_reports.py \
+  --input-dir resultados \
+  --output-file docs/appendix_a_questions_and_answer_key.md
+
+python scripts/build_figure4_ten_heatmap.py \
+  --input-dir resultados \
+  --output-dir docs/artefatos
+
+python scripts/convert_answer_key_pdf_to_markdown.py \
+  --input-pdf caminho/para/seu-gabarito.pdf \
+  --output-file docs/answer_key_from_pdf.md
+```
+
+Observação: a etapa do n8n (ingestão, recuperação e avaliação) continua sendo executada pela interface do workflow.
 
 ## Checklist de reprodutibilidade
 
