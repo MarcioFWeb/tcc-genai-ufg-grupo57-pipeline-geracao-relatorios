@@ -1,134 +1,239 @@
-# TCC GenAI - Grupo 57 (UFG) - Pipeline RAG + Auditoria Automatizada (Novo CAGED)
+# TCC GenAI - Grupo 57 (UFG)
 
-Este repositório contém o experimento de comparação entre abordagens Sem RAG e Com RAG em n8n, com avaliação automatizada do tipo LLM-as-a-Judge para perguntas sobre documentos públicos do Novo CAGED.
+Pipeline RAG + Auditoria Automatizada (LLM-as-a-Judge) para perguntas sobre publicações oficiais do Novo CAGED.
+
+Este repositório foi organizado para facilitar reprodução por qualquer pessoa, sem dependências de caminhos locais específicos. Onde houver placeholders, substitua pelos IDs, nomes de credenciais e pastas do seu próprio ambiente.
 
 ## Objetivo
 
-- Responder perguntas sobre documentos públicos do Novo CAGED.
-- Comparar:
+- Comparar respostas de modelos em dois cenários:
   - Sem RAG (baseline)
-  - Com RAG (busca vetorial + contexto)
-- Avaliar qualidade e confiabilidade das respostas.
+  - Com RAG (recuperação vetorial + contexto)
+- Aplicar avaliação automatizada por rubrica (agente juiz).
+- Consolidar métricas por questão, modelo e condição.
 
 ## Estrutura do repositório
 
 - `workflow/`: export do fluxo n8n.
-- `instrumento/`: gabarito e perguntas (Q1-Q20).
-- `resultados/`: saídas do experimento.
+- `instrumento/`: material de instrumento/gabarito.
+- `resultados/`: relatórios por questão (Q1-Q20).
+- `scripts/`: scripts auxiliares para consolidação e geração de artefatos.
 - `figuras/`: imagens e diagramas do trabalho.
-- `scripts/`: utilitários de apoio.
-- `docs/`: documentação complementar.
+- `docs/`: documentação e artefatos gerados.
 
 ## Arquivo principal do fluxo
 
 - `workflow/RAG+Chat.json`
 
-O arquivo foi higienizado para publicação. IDs e nomes de credenciais, links específicos de pasta e identificadores internos sensíveis foram substituídos por placeholders.
+O workflow foi higienizado para publicação. IDs internos, nomes de credenciais e referências sensíveis foram substituídos por placeholders.
 
-## Pré-requisitos para reproduzir
+## Referências oficiais e de apoio
 
-- n8n em execução (preferencialmente versão recente com suporte aos nodes usados).
+### Novo CAGED (fontes originais)
+
+- Gov.br (notícia janeiro/2026):
+  - https://www.gov.br/trabalho-e-emprego/pt-br/noticias-e-conteudo/2026/janeiro/novo-caged-brasil-encerra-2025-com-saldo-positivo-de-1-27-milhão-de-empregos-formais
+- Gov.br (página Novo CAGED):
+  - https://www.gov.br/trabalho-e-emprego/pt-br/assuntos/estatísticas-trabalho/novo-caged/2026/janeiro/pagina-inicial
+- Vídeo de referência:
+  - https://youtu.be/DBnTVyb8FMc
+- Painel Power BI:
+  - https://app.powerbi.com/view?r=eyJrIjoiNWI5NWI0ODEtYmZiYy00Mjg3LTkzNWUtY2UyYjIwMDE1YWI2IiwidCI6IjNlYzkyOTY5LTVhNTEtNGYxOC04YWM5LWVmOThmYmFmYTk3OCJ9&pageName=ReportSectionb52b07ec3b5f3ac6c749
+
+### Pastas Google Drive (exemplo do experimento)
+
+Use apenas como referência de estrutura. Ao reproduzir, crie/copie para suas próprias pastas no Drive e substitua os IDs no workflow.
+
+- Exemplo de pasta de ENTRADA (nos "Buscar Arquivos" / "Buscar Arquivos2"):
+  - https://drive.google.com/drive/folders/10Xv67x7_3tvBEk7Rlyc_cwgcCcPycfrX
+- Exemplo de pasta de SAÍDA (no "Create file from text"):
+  - https://drive.google.com/drive/folders/1_FEf1MxVE88cyk6QfF7vBBqvrGT_S_7a
+
+## Figuras do projeto
+
+- A pasta `figuras/` centraliza os diagramas e imagens usados no trabalho.
+- Se sua cópia local estiver apenas com `.gitkeep`, adicione suas imagens exportadas nessa pasta mantendo nomes claros (ex.: `pipeline-geral.png`, `figura4-heatmap-ten.png`).
+- Os scripts em `scripts/` podem gerar artefatos visuais em `docs/artefatos/` para serem reutilizados nas figuras finais.
+
+## Pré-requisitos
+
+## 1) Ambiente base
+
+- n8n instalado e executando.
+  - https://n8n.io/
+- Python 3.10+ para scripts auxiliares.
 - Conta Google com acesso ao Google Drive.
-- Serviço Qdrant acessível.
-- Ollama acessível (se for rodar os caminhos com Ollama).
-- Chaves de API para:
-  - Google Gemini
-  - Anthropic
-  - Mistral
-- Documentos de referência do Novo CAGED em uma pasta no Google Drive.
+- Qdrant (Cloud ou self-hosted) disponível.
+  - https://qdrant.tech/
+- Ollama (opcional, se for executar ramo local).
+  - https://ollama.com/
+
+## 2) APIs e credenciais
+
+Crie e teste as chaves/credenciais antes de importar o workflow:
+
+- Google Gemini API:
+  - https://ai.google.dev/
+- Anthropic API:
+  - https://console.anthropic.com/
+- Mistral API:
+  - https://console.mistral.ai/
+- Google Drive OAuth2 (no n8n).
+
+## 3) Dependência Python dos scripts
+
+- `pypdf` (necessária para o conversor de PDF):
+
+```bash
+pip install pypdf
+```
 
 ## Placeholders que precisam ser ajustados
 
-Preencha todos os placeholders abaixo no fluxo importado (via UI do n8n ou editando o JSON antes da importação).
+Preencha os placeholders no workflow importado (via UI do n8n ou editando JSON antes da importação):
 
 | Placeholder | Onde aparece | O que colocar |
 |---|---|---|
-| `__CRED_GOOGLE_DRIVE_ID__` | Blocos `credentials.googleDriveOAuth2Api.id` | ID interno da credencial Google Drive no seu n8n |
-| `GOOGLE_DRIVE_CREDENTIAL_NAME` | Blocos `credentials.googleDriveOAuth2Api.name` | Nome exato da credencial Google Drive no seu n8n |
-| `GOOGLE_DRIVE_SOURCE_FOLDER_ID` | Campos de `folderId` e mensagens de origem de dados | ID da pasta Drive com os documentos de entrada |
-| `GOOGLE_DRIVE_RESULTS_FOLDER_ID` | Node `Create file from text` e mensagem inicial | ID da pasta Drive para salvar os resultados |
-| `__CRED_QDRANT_API_ID__` | Blocos `credentials.qdrantApi.id` | ID interno da credencial Qdrant API |
-| `QDRANT_API_CREDENTIAL_NAME` | Blocos `credentials.qdrantApi.name` | Nome da credencial Qdrant API no n8n |
-| `__CRED_QDRANT_REST_ID__` | Blocos `credentials.qdrantRestApi.id` | ID interno da credencial Qdrant REST |
-| `QDRANT_REST_CREDENTIAL_NAME` | Blocos `credentials.qdrantRestApi.name` | Nome da credencial Qdrant REST no n8n |
-| `QDRANT_COLLECTION_GEMINI` | `qdrantCollection.value` (ramo Gemini) | Nome da coleção no Qdrant para esse ramo |
-| `QDRANT_COLLECTION_OLLAMA` | `qdrantCollection.value` e `collectionName` (ramo Ollama) | Nome da coleção no Qdrant para esse ramo |
-| `QDRANT_COLLECTION_ANTHROPIC` | `qdrantCollection.value` (ramo Anthropic) | Nome da coleção no Qdrant para esse ramo |
-| `__CRED_GOOGLE_GEMINI_ID__` | Blocos `credentials.googlePalmApi.id` | ID interno da credencial Gemini |
-| `GOOGLE_GEMINI_CREDENTIAL_NAME` | Blocos `credentials.googlePalmApi.name` | Nome da credencial Gemini no n8n |
-| `__CRED_ANTHROPIC_ID__` | Blocos `credentials.anthropicApi.id` | ID interno da credencial Anthropic |
-| `ANTHROPIC_CREDENTIAL_NAME` | Blocos `credentials.anthropicApi.name` | Nome da credencial Anthropic no n8n |
-| `__CRED_MISTRAL_ID__` | Blocos `credentials.mistralCloudApi.id` | ID interno da credencial Mistral |
-| `MISTRAL_CREDENTIAL_NAME` | Blocos `credentials.mistralCloudApi.name` | Nome da credencial Mistral no n8n |
-| `__CRED_OLLAMA_ID__` | Blocos `credentials.ollamaApi.id` | ID interno da credencial Ollama |
-| `OLLAMA_CREDENTIAL_NAME` | Blocos `credentials.ollamaApi.name` | Nome da credencial Ollama no n8n |
-| `__N8N_CHAT_WEBHOOK_ID__` | Campo `webhookId` do `When chat message received` | Deixe o n8n gerar automaticamente ao salvar/publicar o gatilho |
-| `__N8N_INSTANCE_ID__` | `meta.instanceId` | Pode manter placeholder para publicação; no ambiente local será preenchido/exportado automaticamente |
-| `__N8N_WORKFLOW_ID__` | Campo raiz `id` do workflow | Pode manter placeholder antes da importação; o n8n define o ID real após criar |
-| `__N8N_TAG_ID__` | `tags[].id` | Opcional; pode remover tags ou deixar o n8n recriar |
+| `__CRED_GOOGLE_DRIVE_ID__` | `credentials.googleDriveOAuth2Api.id` | ID interno da credencial Google Drive |
+| `GOOGLE_DRIVE_CREDENTIAL_NAME` | `credentials.googleDriveOAuth2Api.name` | Nome exato da credencial Google Drive |
+| `GOOGLE_DRIVE_SOURCE_FOLDER_ID` | Campos de `folderId` e mensagens de origem | ID da sua pasta de entrada no Drive |
+| `GOOGLE_DRIVE_RESULTS_FOLDER_ID` | Node `Create file from text` | ID da sua pasta de saída no Drive |
+| `__CRED_QDRANT_API_ID__` | `credentials.qdrantApi.id` | ID interno da credencial Qdrant API |
+| `QDRANT_API_CREDENTIAL_NAME` | `credentials.qdrantApi.name` | Nome da credencial Qdrant API |
+| `__CRED_QDRANT_REST_ID__` | `credentials.qdrantRestApi.id` | ID interno da credencial Qdrant REST |
+| `QDRANT_REST_CREDENTIAL_NAME` | `credentials.qdrantRestApi.name` | Nome da credencial Qdrant REST |
+| `QDRANT_COLLECTION_GEMINI` | `qdrantCollection.value` (ramo Gemini) | Nome da coleção no Qdrant |
+| `QDRANT_COLLECTION_OLLAMA` | `qdrantCollection.value` e `collectionName` (ramo Ollama) | Nome da coleção no Qdrant |
+| `QDRANT_COLLECTION_ANTHROPIC` | `qdrantCollection.value` (ramo Anthropic) | Nome da coleção no Qdrant |
+| `__CRED_GOOGLE_GEMINI_ID__` | `credentials.googlePalmApi.id` | ID interno da credencial Gemini |
+| `GOOGLE_GEMINI_CREDENTIAL_NAME` | `credentials.googlePalmApi.name` | Nome da credencial Gemini |
+| `__CRED_ANTHROPIC_ID__` | `credentials.anthropicApi.id` | ID interno da credencial Anthropic |
+| `ANTHROPIC_CREDENTIAL_NAME` | `credentials.anthropicApi.name` | Nome da credencial Anthropic |
+| `__CRED_MISTRAL_ID__` | `credentials.mistralCloudApi.id` | ID interno da credencial Mistral |
+| `MISTRAL_CREDENTIAL_NAME` | `credentials.mistralCloudApi.name` | Nome da credencial Mistral |
+| `__CRED_OLLAMA_ID__` | `credentials.ollamaApi.id` | ID interno da credencial Ollama |
+| `OLLAMA_CREDENTIAL_NAME` | `credentials.ollamaApi.name` | Nome da credencial Ollama |
+| `__N8N_CHAT_WEBHOOK_ID__` | `webhookId` do gatilho de chat | Deixe o n8n gerar ao salvar/publicar |
+| `__N8N_INSTANCE_ID__` | `meta.instanceId` | Pode manter placeholder em publicação |
+| `__N8N_WORKFLOW_ID__` | `id` raiz do workflow | O n8n define ao criar |
+| `__N8N_TAG_ID__` | `tags[].id` | Opcional |
 
-## Como importar e configurar no n8n (passo a passo)
+## Manual abrangente de reprodução (passo a passo)
 
-1. Abra o n8n e importe `workflow/RAG+Chat.json`.
-2. Crie as credenciais necessárias no n8n:
-   - Google Drive OAuth2
-   - Qdrant API e/ou Qdrant REST
-   - Google Gemini
-   - Anthropic
-   - Mistral
+## Etapa 1 - Preparar dados no Google Drive
 
-- Ollama (quando aplicável)
+1. Crie uma pasta de entrada no seu Drive.
+2. Copie para ela os documentos-base que serão ingeridos pelo pipeline.
+3. Crie uma pasta de saída para os relatórios gerados.
+4. Garanta que a conta autenticada no n8n tem permissão de leitura/escrita nas duas pastas.
+5. Guarde os IDs dessas pastas para substituir:
+   - `GOOGLE_DRIVE_SOURCE_FOLDER_ID`
+   - `GOOGLE_DRIVE_RESULTS_FOLDER_ID`
 
-1. Em cada node com erro de credencial, selecione a credencial correta na UI.
-2. Ajuste os IDs das pastas do Google Drive:
-   - Pasta de entrada (`GOOGLE_DRIVE_SOURCE_FOLDER_ID`)
+## Etapa 2 - Preparar Qdrant
 
-- Pasta de saída (`GOOGLE_DRIVE_RESULTS_FOLDER_ID`)
+1. Suba uma instância Qdrant (cloud/local).
+2. Gere API key/token conforme seu ambiente.
+3. No n8n, crie credenciais Qdrant API e/ou Qdrant REST.
+4. Defina os nomes das coleções usadas no workflow:
+   - `QDRANT_COLLECTION_GEMINI`
+   - `QDRANT_COLLECTION_OLLAMA`
+   - `QDRANT_COLLECTION_ANTHROPIC`
+5. Valide conexão no n8n antes da primeira execução.
 
-3. Ajuste os nomes das coleções no Qdrant:
-   - Gemini
-   - Ollama
-   - Anthropic
-2. Salve o workflow e valide se não restaram warnings de credencial/campos obrigatórios.
-3. Execute primeiro o gatilho/manual de embeddings para popular o Qdrant.
-4. Execute o fluxo de chat para testar perguntas.
+## Etapa 3 - Preparar chaves de LLMs
 
-## Ordem recomendada de execução do experimento
+1. Gere as chaves nos portais oficiais (Gemini, Anthropic, Mistral).
+2. Cadastre cada chave como credencial no n8n.
+3. Associe cada credencial aos nodes correspondentes.
+4. Se usar Ollama, configure URL e credencial local no n8n.
 
-1. Subir/validar servicos externos (Drive, Qdrant, APIs e Ollama).
-2. Ingerir documentos (pipeline de OCR + split + embeddings).
-3. Conferir se as coleções no Qdrant foram preenchidas.
-4. Rodar perguntas Q1-Q20 do instrumento.
-5. Salvar saídas no Drive/pasta de resultados.
-6. Revisar e consolidar resultados em `resultados/`.
+## Etapa 4 - Importar e ajustar o workflow no n8n
 
-## Checklist de reprodutibilidade completa
+1. Importe `workflow/RAG+Chat.json`.
+2. Substitua placeholders de credenciais, pastas e coleções.
+3. Revise nodes de busca no Drive (ex.: Buscar Arquivos/Buscar Arquivos2).
+4. Revise node de escrita de saída (Create file from text).
+5. Salve workflow e confirme que não há warnings de configuração.
 
-- Todos os placeholders foram substituidos ou tratados pela UI do n8n.
-- Todas as credenciais testadas com sucesso no n8n.
-- Pastas de entrada e saída do Drive acessíveis pela conta autenticada.
-- Coleções do Qdrant criadas e populadas.
-- Caminhos Sem RAG e Com RAG executando sem erro.
-- Ramo de avaliação automática gerando saída.
-- Resultados exportados para análise posterior.
+## Etapa 5 - Executar pipeline de ingestão e embeddings
+
+1. Execute o trecho de ingestão/extração/chunking/embeddings.
+2. Aguarde escrita dos vetores no Qdrant.
+3. Valide no Qdrant que as coleções foram populadas.
+
+## Etapa 6 - Executar perguntas e avaliação automatizada
+
+1. Rode o fluxo para as perguntas Q1-Q20 do instrumento.
+2. Gere respostas nos cenários Sem RAG e Com RAG.
+3. Execute o módulo de avaliação automatizada (agente juiz).
+4. Salve relatórios por questão na pasta de saída.
+
+## Etapa 7 - Consolidar artefatos com os scripts
+
+Todos os scripts foram generalizados para usar parâmetros CLI.
+
+1. Agregar métricas:
+
+```bash
+python scripts/aggregate_evaluation_results.py \
+  --input-dir resultados \
+  --output-dir docs/artefatos
+```
+
+2. Gerar apêndice consolidado de perguntas e gabarito:
+
+```bash
+python scripts/build_appendix_a_from_reports.py \
+  --input-dir resultados \
+  --output-file docs/appendix_a_questions_and_answer_key.md
+```
+
+3. Gerar matriz TEN (CSV + SVG):
+
+```bash
+python scripts/build_figure4_ten_heatmap.py \
+  --input-dir resultados \
+  --output-dir docs/artefatos
+```
+
+4. Converter PDF de gabarito para Markdown:
+
+```bash
+python scripts/convert_answer_key_pdf_to_markdown.py \
+  --input-pdf caminho/para/seu-gabarito.pdf \
+  --output-file docs/answer_key_from_pdf.md
+```
+
+## Etapa 8 - Conferência final
+
+- Verifique se todos os placeholders foram resolvidos.
+- Verifique se os relatórios por questão foram gerados corretamente.
+- Verifique se os artefatos consolidados em `docs/artefatos/` estão coerentes.
+- Versione resultados e documentação sem incluir segredos.
+
+## Checklist de reprodutibilidade
+
+- Credenciais testadas no n8n.
+- Pastas Drive de entrada e saída validadas.
+- Coleções Qdrant criadas e com vetores.
+- Fluxos Sem RAG e Com RAG executando.
+- Avaliação automatizada gerando relatório por questão.
+- Scripts de consolidação executados com sucesso.
 
 ## Observações de segurança
 
-- Não versionar chaves, tokens, cookies, session IDs nem export de credenciais.
-- Antes de publicar novo export do workflow, conferir se não há IDs reais em:
+- Não versionar tokens, chaves, cookies ou IDs sensíveis.
+- Antes de publicar export novo do workflow, revisar especialmente:
   - `credentials.*.id`
   - `credentials.*.name`
   - `webhookId`
-  - links/IDs de pasta do Google Drive
+  - IDs/links de pasta do Drive
   - `meta.instanceId`
-
-## Fontes de dados públicas (Novo CAGED)
-
-Use preferencialmente links oficiais do Gov.br para os documentos utilizados no experimento (sumarios, notas tecnicas e tabelas complementares).
 
 ## Autores
 
-Grupo 57 - Pos-Graduacao em IA Generativa (UFG)
+Grupo 57 - Pós-Graduação em IA Generativa (UFG)
 
 - Cleyton Lima Dias
 - Michael Pacheco Abreu Pinheiro
@@ -136,4 +241,6 @@ Grupo 57 - Pos-Graduacao em IA Generativa (UFG)
 
 ## Licença
 
-Definir pelo grupo (ex.: MIT) ou manter todos os direitos reservados até a decisão final de publicação.
+Este projeto está licenciado sob a licença MIT.
+
+Consulte o arquivo `LICENSE` para o texto completo e os termos de uso.
